@@ -1,13 +1,16 @@
 #include <iostream>
-#include <iomanip>
 #include <vector>
-#include <math.h>  
-#include <ff/ff.hpp>
-#include <ff/parallel_for.hpp>
+#include <thread>
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <cstdlib>
+#include <chrono>
 
+// TODO use arrays for matrix
 using namespace std;
-using namespace ff;
 
+typedef std::chrono::high_resolution_clock Clock;
 typedef int (* iFunctionCall)(int args, vector<int> arr);
 
 int mod(int a, int b) {
@@ -57,8 +60,6 @@ class Table {
       for (int i = 0; i < size; i++) {
         row = i / width;
         column = i % width;
-        // TODO INITIALIZE CELL VALUES 
-        // TODO SEED
         current->push_back(Cell(i, rand() % 2, row, column));
         future->push_back(Cell(i, 0, row, column));
       }
@@ -125,6 +126,30 @@ class Table {
     }
 };
 
+void execute(int& n, int start, int stop, Table& table, iFunctionCall& rule, int& nSteps, 
+  atomic<int>& threadsR, atomic<int>& threadsD, condition_variable& ns, mutex& m, condition_variable& check) {
+  for (int j = 0; j < nSteps; j++) {
+    for (int i = start; i <= stop; i++) {
+      int val = table.getCellValue(i);
+      int nVal = rule(val, table.getNeighbours(i));
+      table.setFuture(i, nVal);
+    }
+    //cout << "Step: " << j << " ended" << endl;
+    unique_lock<mutex> lock(m);
+    if (++threadsR == n) {
+      //cout << "Notifying main thread!" << endl;
+      check.notify_all();
+    }
+    ns.wait(lock);
+    // FIXME SPURIOUS WAKEUP -> thread counter
+    //ns.wait(lock, [tR = threadsR.load(), n](){ cout << "Thread id:" << this_thread::get_id() << " tried to wake up but " << tR << " ? " << n << endl; return tR == n; });
+  }
+  //cout << "Thread: " << this_thread::get_id() << " is done" << endl;
+  threadsD++;
+  if (threadsD.load() == n) { /* cout << "Waking up all!" << endl; */ check.notify_all(); }
+  return;
+}
+
 class Game {
   private:
     // game table
@@ -137,6 +162,13 @@ class Game {
     int nSteps;
     // number of Cells
     int size;
+    // wait here until nextStep is executable
+    condition_variable nextStep;
+    // wait here until a thread has completed a step
+    condition_variable check;
+    // utility mutex
+    mutex m;
+    mutex m1;
 
   public:
     Game() {
@@ -165,45 +197,60 @@ class Game {
         table = Table(height, width);
         size = height * width;
     }
-    
     void run() {
-      bool schedoff = false;
-      ff::ParallelFor pf(nw);
-      ff::Stencil2D sten();
-      if (schedoff) pf.disableScheduler(); // disables the use of the scheduler
 
-      vector<vector<int>> vectors;
-      for (int i = 0; i < nw; i++) {
-        vectors.push_back(vector<int>());
-      }
-      // TODO Fix for not divisible
-      int chunk = size / nw;
-      /* cout << "chunksize: " << chunk << endl; */
-
-      cout << "steps: " << nSteps << endl;
-      for (int i = 0; i < nSteps; i++) {
-        /* cout << "ENTERED with index: " << i << endl; */
-        pf.parallel_for(  0, size,
-                          1,
-                          0,
-                          [&](const long i) {
-                            int val = table.getCellValue(i);
-                            int nVal = rule(val, table.getNeighbours(i));
-                            vectors[ceil(i / chunk)].push_back(nVal);
-                            /* cout << "element: " << i << "set in " << ceil(i / chunk) << endl; */
-                          });
-        /* cout << "PARFOR DONE" << endl; */
-        for (int k = 0; k < nw; k++) {
-          for(std::vector<int>::size_type j = 0; j != vectors[k].size(); j++) {
-            table.setFuture((k * chunk) + j, vectors[k][j]);
+      if (nw == 1) {
+        for (int j = 0; j < nSteps; j++) {
+          for (int i = 0; i < size; i++) {
+            int val = table.getCellValue(i);
+            int nVal = rule(val, table.getNeighbours(i));
+            table.setFuture(i, nVal);
           }
-          vectors[k].clear();
+          table.swapCurrentFuture();
         }
-        table.printCurrent();
-        table.swapCurrentFuture();
-        /* cout << "currently index: " << i << endl; */
+        return;
       }
-      table.printCurrent();
+
+      vector<thread*> tids(nw);
+      int offset = size / nw;
+      int remaining  =  size % nw;
+      int start = 0;
+      int stop = offset - 1;
+      //  TODO REFACTOR
+      atomic<int> threadsReady(0);
+      atomic<int> threadsDone(0);
+      for(int i = 0; i < nw; i++) {
+        tids[i] = new thread(execute, ref(nw), start, stop, ref(table), ref(rule), ref(nSteps), 
+                            ref(threadsReady), ref(threadsDone), ref(nextStep), ref(m), ref(check));
+        start += offset;
+        if (i == (nw - 2)) stop += offset + remaining;
+        else stop += offset;
+      }
+
+      // if computation is not over
+      while (threadsDone.load() != nw) {
+        // check if threads are all ready for the next step
+        unique_lock<mutex> lock(m);
+        /* cout << "Threads done: " << threadsDone.load() << endl; */
+        //lock.lock();
+        while (threadsReady.load() < nw) {
+          //cout << threadsReady.load() << "=/=" << nw << endl;
+          /* cout << "Going to sleep" << endl; */
+          check.wait(lock);
+          /* cout << "Woken up, tR: " << threadsReady.load() << "tD: " << threadsDone.load() << endl; */
+          if (threadsDone.load() == nw) break;
+        }
+        if (threadsDone.load() == nw) break;
+        //lock.unlock();
+        table.swapCurrentFuture();
+        table.printCurrent();
+        threadsReady.exchange(0);
+        // send wake up signals
+        nextStep.notify_all();
+      }
+
+      for(auto e : tids)
+        e->join();
       cout << "SET" << endl;
       return;
     }
@@ -252,17 +299,19 @@ int main(int argc, char* argv[]) {
   // number of steps
   auto nSteps   = atoi(argv[4]);
   // rule to apply (default is game of life)
-  iFunctionCall rule = gameRule;
+  auto rule = gameRule;
   if (argc == 6) {
     rule = rules[atoi(argv[5])];
   }
-  
-  ff::ffTime(ff::START_TIME);
-
+  // automaton setup
   Game g = Game(height, width, rule, nWorkers, nSteps);
+  // timing the run
+  auto start = Clock::now();
   g.run();
+  auto end = Clock::now();
 
-  ff::ffTime(ff::STOP_TIME);
-    std::cout << "Computed in: " << std::setprecision(8) << ff::ffTime(ff::GET_TIME) << " ms"  << std::endl;
+  std::cout << "Computed in: " 
+            << chrono::duration_cast<chrono::milliseconds>(end - start).count()
+            << " milliseconds" << std::endl;
   return 0;
 }

@@ -201,6 +201,19 @@ class Game {
         size = height * width;
     }
     void run() {
+
+      if (nw == 1) {
+        for (int j = 0; j < nSteps; j++) {
+          for (int i = 0; i < size; i++) {
+            int val = table.getCellValue(i);
+            int nVal = rule(val, table.getNeighbours(i));
+            table.setFuture(i, nVal);
+          }
+          table.swapCurrentFuture();
+        }
+        return;
+      }
+
       vector<thread*> tids(nw);
       int offset = size / nw;
       int remaining  =  size % nw;
@@ -234,7 +247,7 @@ class Game {
         if (threadsDone.load() == nw) break;
         //lock.unlock();
         table.swapCurrentFuture();
-        table.printCurrent();
+        /* table.printCurrent(); */
         threadsReady.exchange(0);
         /* cout << "Future set" << endl; */
         // send wake up signals

@@ -197,16 +197,14 @@ struct Emitter: ff::ff_monode_t<int, pair_t> {
       /* cout << "All threads ready for next step" << endl; */
       threadsR = 0;
       nSteps--;
-      table->printCurrent();
+      //table->printCurrent();
       table->swapCurrentFuture();
       broadcast_task(&START_TASK);
     } 
     else if (threadsR == nw && nSteps == 1) {
       /* cout << "All threads done" << endl; */
-      table->printCurrent();
-      table->printFuture();
-      //table.swapCurrentFuture();
-      //table.printCurrent();
+      //table->printCurrent();
+      //table->printFuture();
       broadcast_task(EOS);
     }
     // else we still have to wait some threads

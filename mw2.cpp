@@ -405,7 +405,7 @@ class Game {
         long s_width = width;
         long remaining  = height % nw;
 
-        table.printCurrent();
+        /* table.printCurrent(); */
 
         if (nw != 1) {
           for (int i = 0; i < nw; i++) {
@@ -416,7 +416,7 @@ class Game {
               subtables[i].getCurrent()->push_back(table.getRow(mod(j + (i * s_height_avg), height)));
               subtables[i].getFuture()->push_back(table.getRow(mod(j + (i * s_height_avg), height)));
             }
-            subtables[i].printCurrent();
+            /* subtables[i].printCurrent(); */
           }
         }
     }
@@ -451,9 +451,9 @@ class Game {
         ff::error("running farm");
         return -1;
       }
-      for (int i = 0; i < nw; i++) {
+/*       for (int i = 0; i < nw; i++) {
         subtables[i].printCurrent();
-      }
+      } */
       cout << "SET" << endl;
       return 0;
     }
