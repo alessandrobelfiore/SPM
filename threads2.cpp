@@ -26,6 +26,8 @@ class Cell {
     int value;
     
   public:
+    Cell() = default;
+
     Cell(int index, int value, int row, int column): 
       index(index), value(value), row(row), column(column) {}
 
@@ -44,8 +46,8 @@ class Cell {
 
 class Table {
   private:
-    vector<Cell>* current = new vector<Cell>();
-    vector<Cell>* future = new vector<Cell>();
+    Cell* current;
+    Cell* future;
     int width;
     int height;
 
@@ -57,30 +59,31 @@ class Table {
       height(height), width(width) {
       int size = height * width;
       int column, row;
+      current = new Cell[size];
+      future = new Cell[size];
       for (int i = 0; i < size; i++) {
         row = i / width;
         column = i % width;
-        current->push_back(Cell(i, rand() % 2, row, column));
-        future->push_back(Cell(i, 0, row, column));
+        current[i] = Cell(i, rand() % 2, row, column);
+        future[i] = Cell(i, 0, row, column);
       }
-      //future = current;
     }
 
-    vector<Cell>* getCurrent() { return current; }
+    Cell* getCurrent() { return current; }
 
     void setFuture(int index, int value) {
-      future->at(index).setValue(value);
+      future[index].setValue(value);
     }
 
     int getCellValue(int i) {
-      return current->at(i).getValue();
+      return current[i].getValue();
     }
 
     // print current table config
     void printCurrent() {
       for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-          int v = current->at(i * width + j).getValue();
+          int v = current[i * width + j].getValue();
           if (v == 0) cout << "-";
           else cout << "x";
         }
@@ -93,7 +96,7 @@ class Table {
     void printFuture() {
       for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-          int v = future->at(i * width + j).getValue();
+          int v = future[i * width + j].getValue();
           if (v == 0) cout << "-";
           else cout << "x";
         }
@@ -108,20 +111,31 @@ class Table {
       future = tmp;
     }
 
-    int getNW(int i) { return width * (mod(current->at(i).getRow() - 1, width))   + (mod(current->at(i).getColumn() - 1, height)); } 
-    int getN(int i) { return width  * (mod(current->at(i).getRow() - 1, width))   + (mod(current->at(i).getColumn(), height)); } 
-    int getNE(int i) { return width * (mod(current->at(i).getRow() - 1, width))   + (mod(current->at(i).getColumn() + 1, height)); }
-    int getW(int i) { return width  * (mod(current->at(i).getRow(), width))       + (mod(current->at(i).getColumn() - 1, height)); }
-    int getE(int i) { return width  * (mod(current->at(i).getRow(), width))       + (mod(current->at(i).getColumn() + 1, height)); }
-    int getSW(int i) { return width * (mod(current->at(i).getRow() + 1, width))   + (mod(current->at(i).getColumn() - 1, height)); }
-    int getS(int i) { return width  * (mod(current->at(i).getRow() + 1, width))   + (mod(current->at(i).getColumn(), height)); }
-    int getSE(int i) { return width * (mod(current->at(i).getRow() + 1, width))   + (mod(current->at(i).getColumn() + 1, height)); }
+    int getNW(int i) { return width * (mod(current[i].getRow() - 1, width))   + (mod(current[i].getColumn() - 1, height)); } 
+    int getN(int i) { return width  * (mod(current[i].getRow() - 1, width))   + (mod(current[i].getColumn(), height)); } 
+    int getNE(int i) { return width * (mod(current[i].getRow() - 1, width))   + (mod(current[i].getColumn() + 1, height)); }
+    int getW(int i) { return width  * (mod(current[i].getRow(), width))       + (mod(current[i].getColumn() - 1, height)); }
+    int getE(int i) { return width  * (mod(current[i].getRow(), width))       + (mod(current[i].getColumn() + 1, height)); }
+    int getSW(int i) { return width * (mod(current[i].getRow() + 1, width))   + (mod(current[i].getColumn() - 1, height)); }
+    int getS(int i) { return width  * (mod(current[i].getRow() + 1, width))   + (mod(current[i].getColumn(), height)); }
+    int getSE(int i) { return width * (mod(current[i].getRow() + 1, width))   + (mod(current[i].getColumn() + 1, height)); }
+
+/*     void getNeighbours(int i, int* arr) {
+      arr[0] = current[getNW(i)].getValue();
+      arr[1] = current[getN(i)].getValue();
+      arr[2] = current[getNE(i)].getValue();
+      arr[3] = current[getW(i)].getValue();
+      arr[4] = current[getE(i)].getValue();
+      arr[5] = current[getSW(i)].getValue();
+      arr[6] = current[getS(i)].getValue();
+      arr[7] = current[getSE(i)].getValue();
+    } */
 
     vector<int> getNeighbours(int i) {
       vector<int> arr = 
-                {current->at(getNW(i)).getValue(),  current->at(getN(i)).getValue(), current->at(getNE(i)).getValue(), 
-                 current->at(getW(i)).getValue(),   current->at(getE(i)).getValue(),
-                 current->at(getSW(i)).getValue(),  current->at(getS(i)).getValue(), current->at(getSE(i)).getValue() };
+                {current[getNW(i)].getValue(),  current[getN(i)].getValue(), current[getNE(i)].getValue(), 
+                 current[getW(i)].getValue(),   current[getE(i)].getValue(),
+                 current[getSW(i)].getValue(),  current[getS(i)].getValue(), current[getSE(i)].getValue() };
       return arr;
     }
 };
@@ -132,6 +146,9 @@ void execute(int& n, int start, int stop, Table& table, iFunctionCall& rule, int
     for (int i = start; i <= stop; i++) {
       int val = table.getCellValue(i);
       int nVal = rule(val, table.getNeighbours(i));
+/*       int tmp[8]; 
+      table.getNeighbours(i, tmp);
+      int nVal = rule(val, tmp); */
       table.setFuture(i, nVal);
     }
     //cout << "Step: " << j << " ended" << endl;
@@ -203,9 +220,13 @@ class Game {
         for (int j = 0; j < nSteps; j++) {
           for (int i = 0; i < size; i++) {
             int val = table.getCellValue(i);
+/*             int tmp[8]; 
+            table.getNeighbours(i, tmp);
+            int nVal = rule(val, tmp); */
             int nVal = rule(val, table.getNeighbours(i));
             table.setFuture(i, nVal);
           }
+          //table.printCurrent();
           table.swapCurrentFuture();
         }
         return;
@@ -243,7 +264,7 @@ class Game {
         if (threadsDone.load() == nw) break;
         //lock.unlock();
         table.swapCurrentFuture();
-        table.printCurrent();
+        //table.printCurrent();
         threadsReady.exchange(0);
         // send wake up signals
         nextStep.notify_all();
@@ -261,6 +282,7 @@ int gameRule(int value, vector<int> neighValues) {
   for (int i = 0; i < 8; i++) {
     sum += neighValues[i];
   }
+  //neighValues.clear();
   if (sum < 2) { return 0; }
   if ((sum == 2 || sum == 3) && value == 1) { return 1; }
   if (value == 0 && sum == 3) { return 1; }

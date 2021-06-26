@@ -138,7 +138,7 @@ void execute(int& n, int start, int stop, Table& table, iFunctionCall& rule, int
       table.setFuture(i, nVal);
     }
     //cout << "Step: " << j << " ended" << endl;
-    unique_lock<mutex> lock(m); // FIXME it works?
+    unique_lock<mutex> lock(m);
     if (++threadsR == n) {
       //cout << "Notifying main thread!" << endl;
       check.notify_all();
@@ -309,32 +309,17 @@ int main(int argc, char* argv[]) {
     rule = rules[atoi(argv[5])];
   }
   
-  auto start = Clock::now();
-
   Game g = Game(height, width, rule, nWorkers, nSteps);
-  g.run();
 
+  auto start = Clock::now();
+  g.run();
   auto end = Clock::now();
+
   std::cout << "Computed in: " 
             << chrono::duration_cast<chrono::milliseconds>(end - start).count()
             << " milliseconds" << std::endl;
   return 0;
 }
-
-      /* for (int i = 0; i < nSteps; i++) {
-        int start = 0;
-        int stop = offset - 1;
-        for(int i = 0; i < nw; i++) {
-          tids[i] = new thread(execute, start, stop, ref(table), rule);
-          start += offset;
-          if (i == (nw - 2)) stop += offset + remaining;
-          else stop += offset;
-        }
-        // barrier
-        table.printCurrent();
-      } */
-
-
 /* Table(int height, int width) {
       current.resize(height);
       future.resize(height);
