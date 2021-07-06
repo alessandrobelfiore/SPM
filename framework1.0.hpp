@@ -261,6 +261,9 @@ class Game {
       std::cout << "Computed in: " 
             << chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count()
             << " milliseconds" << std::endl;
+
+      /* table.printCurrent();
+      table.printFuture(); */
       return;
     }
 
