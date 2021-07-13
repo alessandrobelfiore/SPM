@@ -407,6 +407,8 @@ class Game {
       }
 
       Emitter E(nSteps, nw, size, &table, &subtables);
+      // TODO try lambda
+      // auto lam = [&](int float) { rule(); }
       ff::ff_Farm<> farm( [&]() {
         std::vector<std::unique_ptr<ff_node> > W;
         for(int i = 0; i < nw; i++) {

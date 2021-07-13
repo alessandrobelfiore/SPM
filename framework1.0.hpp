@@ -45,6 +45,7 @@ class Cell {
 
 class Table {
   private:
+  // TRY shared point
     Cell* current;
     Cell* future;
     int width;
@@ -108,6 +109,7 @@ class Table {
       auto tmp = current;
       current = future;
       future = tmp;
+      // std::swap(current, future);
     }
 
     int getNW(int i) { return width * (mod(current[i].getRow() - 1, width))   + (mod(current[i].getColumn() - 1, height)); } 
@@ -201,10 +203,11 @@ class Game {
       return;
     }
     
+    // Passa come copia, se vuoi referenza aggiungi &, oppure && per movable
     virtual int rule(int val, vector<int> arr) { return 0; };
 
     void run() {
-      auto startTime = Clock::now();
+      //auto startTime = Clock::now();
       
       if (nw == 1) {
         for (int j = 0; j < nSteps; j++) {
@@ -257,10 +260,10 @@ class Game {
       for(auto e : tids)
         e->join();
 
-      auto endTime = Clock::now();
+      /* auto endTime = Clock::now();
       std::cout << "Computed in: " 
             << chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count()
-            << " milliseconds" << std::endl;
+            << " milliseconds" << std::endl; */
 
       /* table.printCurrent();
       table.printFuture(); */
