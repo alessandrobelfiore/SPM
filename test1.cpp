@@ -2,7 +2,16 @@
 #include <cstdlib>
 #include <chrono>
 #include <climits>
-#include "framework1.0.hpp"
+
+// compile using array of objects to represent cells
+#ifndef INTVECT 
+#include "frame_cells.hpp"
+#endif
+// compile using array of int to represent cells
+#ifdef INTVECT
+#include "frame_ints.hpp"
+#endif
+
 
 using namespace std;
 typedef std::chrono::high_resolution_clock Clock;

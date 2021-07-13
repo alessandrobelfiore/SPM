@@ -22,7 +22,7 @@ int mod(int a, int b) {
   row:    row index in the 2D matrix
   column: column index in the 2D matrix
   value:  value contained in the cell  */
-class Cell {
+/* class Cell {
   private: 
     int index;
     int row;
@@ -38,7 +38,7 @@ class Cell {
 
     // getters
     int getIndex() { return index; }
-    int getValue() { return value; }
+    int { return value; }
     int getRow() { return row; }
     int getColumn() { return column; }
 
@@ -50,18 +50,18 @@ class Cell {
       else return false;
     }
 };
-
+ */
 /* redefining vectors of cells as rows */
-using row = std::vector<Cell>;
+using row = std::vector<int>;
 /* redefining pairs of vectors of cells*/
-using pair_v = std::pair<vector<Cell>, vector<Cell>>;
+using pair_v = std::pair<vector<int>, vector<int>>;
 
 // parametric? FIXME later
 pair_v make_start_task() {
-  auto tmp = new vector<Cell>;
-  tmp->push_back(Cell(0,-1,0,0));
-  auto tmp1 = new vector<Cell>;
-  tmp1->push_back(Cell(0,-1,0,0));
+  auto tmp = new vector<int>;
+  tmp->push_back(-1);
+  auto tmp1 = new vector<int>;
+  tmp1->push_back(-1);
   return make_pair(*tmp, *tmp1);
 }
 
@@ -92,16 +92,16 @@ class Table {
 
     void generate() {
       for (long i = 0; i < height; i++) {
-        current_rows->push_back(vector<Cell>());
-        future_rows->push_back(vector<Cell>());
+        current_rows->push_back(vector<int>());
+        future_rows->push_back(vector<int>());
       }
 
       for (long i = 0; i < size; i++) {
         long column, row;
         row = i / width;
         column = i % width;
-        current_rows->at(row).push_back(Cell(i, rand() % 2, row, column));
-        future_rows->at(row).push_back(Cell(i, 0, row, column));
+        current_rows->at(row).push_back(rand() % 2);
+        future_rows->at(row).push_back(0);
       }
     }
 
@@ -109,35 +109,35 @@ class Table {
     vector<row>* getFuture() { return future_rows; }
 
     void setFuture(long row, long column, int value) {
-      future_rows->at(row)[column].setValue(value);
+      future_rows->at(row)[column] = value;
     }
 
     void setCurrent(long row, long column, int value) {
-      current_rows->at(row)[column].setValue(value);
+      current_rows->at(row)[column] = value;
     }
 
     void setFuture(long i, int value) {
       long column, row;
       row = i / width;
       column = i % width;
-      future_rows->at(row)[column].setValue(value);
+      future_rows->at(row)[column] = value;
     }
 
     void setCurrent(long i, int value) {
       long column, row;
       row = i / width;
       column = i % width;
-      current_rows->at(row)[column].setValue(value);
+      current_rows->at(row)[column] = value;
     }
 
     int getCellValue(long row, long column) {
-      return current_rows->at(row)[column].getValue();
+      return current_rows->at(row)[column];
     }
     int getCellValue(long i) {
       long column, row;
       row = i / width;
       column = i % width;
-      return current_rows->at(row)[column].getValue();
+      return current_rows->at(row)[column];
     }
     
     long getSize() { return size; }
@@ -152,7 +152,7 @@ class Table {
     void printCurrent() {
       for (long i = 0; i < height; i++) {
         for (long j = 0; j < width; j++) {
-          int v = current_rows->at(i).at(j).getValue();
+          int v = current_rows->at(i).at(j);
           if (v == 0) cout << "-";
           else cout << "x";
         }
@@ -165,7 +165,7 @@ class Table {
     void printFuture() {
       for (long i = 0; i < height; i++) {
         for (long j = 0; j < width; j++) {
-          int v = future_rows->at(i).at(j).getValue();
+          int v = future_rows->at(i).at(j);
           if (v == 0) cout << "-";
           else cout << "x";
         }
@@ -189,31 +189,31 @@ class Table {
     pair_t getS(long row, long column) { return {mod(row + 1, height), column}; }
     pair_t getSE(long row, long column) { return {mod(row + 1, height), mod(column + 1, width)}; }
 
-    vector<int> getNeighbours(long row, long column) {
+    /* vector<int> getNeighbours(long row, long column) {
       vector<int> arr = 
                 {current_rows->at(getNW(row, column).first).at(getNW(row, column).second).getValue(),  current_rows->at(getN(row, column).first).at(getN(row, column).second).getValue(), current_rows->at(getNE(row, column).first).at(getNE(row, column).second).getValue(), 
                  current_rows->at(getW(row, column).first).at(getW(row, column).second).getValue(),   current_rows->at(getE(row, column).first).at(getE(row, column).second).getValue(),
                  current_rows->at(getSW(row, column).first).at(getSW(row, column).second).getValue(),  current_rows->at(getS(row, column).first).at(getS(row, column).second).getValue(), current_rows->at(getSE(row, column).first).at(getSE(row, column).second).getValue() };
       return arr;
-    }
+    } */
 
-    vector<int> getNeighbours2(long row, long column) {
+    /* vector<int> getNeighbours2(long row, long column) {
       vector<int> arr = 
         {current_rows->at(row - 1)[column - 1].getValue(), current_rows->at(row - 1)[column].getValue(), current_rows->at(row - 1)[column + 1].getValue(),
         current_rows->at(row)[column - 1].getValue(), current_rows->at(row)[column + 1].getValue(),
         current_rows->at(row + 1)[column - 1].getValue(), current_rows->at(row + 1)[column].getValue(), current_rows->at(row + 1)[column + 1].getValue(),
         };
       return arr;
-    }
+    } */
 
     vector<int> getNeighbours(int i) {
       long column, row;
       row = i / width;
       column = i % width;
       vector<int> arr = 
-                {current_rows->at(getNW(row, column).first).at(getNW(row, column).second).getValue(),  current_rows->at(getN(row, column).first).at(getN(row, column).second).getValue(), current_rows->at(getNE(row, column).first).at(getNE(row, column).second).getValue(), 
-                 current_rows->at(getW(row, column).first).at(getW(row, column).second).getValue(),   current_rows->at(getE(row, column).first).at(getE(row, column).second).getValue(),
-                 current_rows->at(getSW(row, column).first).at(getSW(row, column).second).getValue(),  current_rows->at(getS(row, column).first).at(getS(row, column).second).getValue(), current_rows->at(getSE(row, column).first).at(getSE(row, column).second).getValue() };
+                {current_rows->at(getNW(row, column).first).at(getNW(row, column).second),  current_rows->at(getN(row, column).first).at(getN(row, column).second), current_rows->at(getNE(row, column).first).at(getNE(row, column).second), 
+                 current_rows->at(getW(row, column).first).at(getW(row, column).second),   current_rows->at(getE(row, column).first).at(getE(row, column).second),
+                 current_rows->at(getSW(row, column).first).at(getSW(row, column).second),  current_rows->at(getS(row, column).first).at(getS(row, column).second), current_rows->at(getSE(row, column).first).at(getSE(row, column).second) };
       return arr;
     }
 };
@@ -246,8 +246,8 @@ struct Worker: ff_node_t<pair_v, int> {
     // and set
     if (in != &START_TASK) {
       for (long j = 0; j < table->getWidth(); j++) {
-        table->setCurrent(0, j, in->first[j].getValue());
-        table->setCurrent(table->getHeight() - 1, j, in->second[j].getValue());
+        table->setCurrent(0, j, in->first[j]);
+        table->setCurrent(table->getHeight() - 1, j, in->second[j]);
       }
       /* table->printCurrent(); */
       return GO_ON;
@@ -407,9 +407,8 @@ class Game {
       }
 
       Emitter E(nSteps, nw, size, &table, &subtables);
-      // Using lambda leads to worse performance
-      // auto l = [&](int val, vector<int> arr) { return rule(val, arr); };
-
+      // TODO try lambda
+      // auto lam = [&](int float) { rule(); }
       ff::ff_Farm<> farm( [&]() {
         std::vector<std::unique_ptr<ff_node> > W;
         for(int i = 0; i < nw; i++) {

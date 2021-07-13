@@ -1,7 +1,15 @@
 #include <iostream>
 #include <cstdlib>
-#include "frameworkFF.hpp"
+#include <chrono>
 
+#ifndef INTVECT
+#include "frameworkFF.hpp"
+#endif
+#ifdef INTVECT
+#include "frameFF_ints.hpp"
+#endif
+
+typedef std::chrono::high_resolution_clock Clock;
 using namespace std;
 
 class Test: public Game {
@@ -30,12 +38,6 @@ int main(int argc, char* argv[]) {
     return(-1);
   }
 
-  iFunctionCall rules[3] = {
-    gameRule,
-    aRule,
-    oRule
-  };
-
   // height
   auto height   = atol(argv[1]);
   // width
@@ -44,9 +46,39 @@ int main(int argc, char* argv[]) {
   auto nWorkers = atoi(argv[3]);
   // number of steps
   auto nSteps   = atoi(argv[4]);
+  // number of runs
+  auto nRuns = 1;
+  if (argc == 6) {
+    nRuns  = atoi(argv[5]);
+  }
 
-  Test g = Test(height, width, nWorkers, nSteps);
-  g.run();
+  vector<long long> timings(nRuns);
+  long long max, avg, sum = 0;
+  long long min = LONG_MAX;
+
+  for (int i = 0; i < nRuns; i++) {
+    // automaton setup
+    Test g = Test(height, width, nWorkers, nSteps);
+    // timing the run
+    auto startTime = Clock::now();
+    g.run();
+    auto endTime = Clock::now();
+    timings[i] = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
+    if (timings[i] > max) max = timings[i];
+    if (timings[i] < min) min = timings[i];
+    sum += timings[i];
+  }
+
+/*   for (int i = 0; i < nRuns; i++) {
+    cout << "Run number " << i + 1 << " computed in: " << timings[i] << " ms" << endl;
+    sum += timings[i];
+  } */
+
+  avg = sum / nRuns;
+
+  cout << "Minimum time: " << min << " ms" << endl;
+  cout << "Maximum time: " << max << " ms" << endl;
+  cout << "Average time: " << avg << " ms" << endl;
 
   return 0;
 }

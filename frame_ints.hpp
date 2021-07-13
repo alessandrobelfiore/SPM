@@ -111,17 +111,9 @@ class Table {
       auto tmp = current;
       current = future;
       future = tmp;
+      // TODO
       // std::swap(current, future);
     }
-
-    /* int getNW(int i) {  return width * (mod(current[i].getRow() - 1, width))    + (mod(current[i].getColumn() - 1, height)); } 
-    int getN(int i) {   return width  * (mod(current[i].getRow() - 1, width))   + (mod(current[i].getColumn(), height)); } 
-    int getNE(int i) {  return width * (mod(current[i].getRow() - 1, width))    + (mod(current[i].getColumn() + 1, height)); }
-    int getW(int i) {   return width  * (mod(current[i].getRow(), width))       + (mod(current[i].getColumn() - 1, height)); }
-    int getE(int i) {   return width  * (mod(current[i].getRow(), width))       + (mod(current[i].getColumn() + 1, height)); }
-    int getSW(int i) {  return width * (mod(current[i].getRow() + 1, width))    + (mod(current[i].getColumn() - 1, height)); }
-    int getS(int i) {   return width  * (mod(current[i].getRow() + 1, width))   + (mod(current[i].getColumn(), height)); }
-    int getSE(int i) {  return width * (mod(current[i].getRow() + 1, width))    + (mod(current[i].getColumn() + 1, height)); } */
 
     vector<int> getNeighbours(int i) {
       long column, row;

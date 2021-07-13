@@ -17,7 +17,7 @@ int mod(int a, int b) {
   return r < 0 ? (r + b) : r;
 }
 
-/* class Cell {
+class Cell {
   private: 
     int index;
     int row;
@@ -41,13 +41,13 @@ int mod(int a, int b) {
 
     // setters
     void setValue(int v) { value = v; }
-}; */
+};
 
 class Table {
   private:
-  // TRY shared point
-    int* current;
-    int* future;
+    // TRY shared point
+    Cell* current;
+    Cell* future;
     int width;
     int height;
 
@@ -59,33 +59,31 @@ class Table {
       height(height), width(width) {
       int size = height * width;
       int column, row;
-      current = new int[size];
-      future = new int[size];
+      current = new Cell[size];
+      future = new Cell[size];
       for (int i = 0; i < size; i++) {
         row = i / width;
         column = i % width;
-        current[i] = rand() % 2;
-        //Cell(i, rand() % 2, row, column);
-        future[i] = 0;
-        // Cell(i, 0, row, column);
+        current[i] = Cell(i, rand() % 2, row, column);
+        future[i] = Cell(i, 0, row, column);
       }
     }
 
-    int* getCurrent() { return current; }
+    Cell* getCurrent() { return current; }
 
     void setFuture(int index, int value) {
-      future[index] = value;
+      future[index].setValue(value);
     }
 
     int getCellValue(int i) {
-      return current[i];
+      return current[i].getValue();
     }
 
     // print current table config
     void printCurrent() {
       for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-          int v = current[i * width + j];
+          int v = current[i * width + j].getValue();
           if (v == 0) cout << "-";
           else cout << "x";
         }
@@ -98,7 +96,7 @@ class Table {
     void printFuture() {
       for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-          int v = future[i * width + j];
+          int v = future[i * width + j].getValue();
           if (v == 0) cout << "-";
           else cout << "x";
         }
@@ -114,37 +112,51 @@ class Table {
       // std::swap(current, future);
     }
 
-    /* int getNW(int i) {  return width * (mod(current[i].getRow() - 1, width))    + (mod(current[i].getColumn() - 1, height)); } 
-    int getN(int i) {   return width  * (mod(current[i].getRow() - 1, width))   + (mod(current[i].getColumn(), height)); } 
-    int getNE(int i) {  return width * (mod(current[i].getRow() - 1, width))    + (mod(current[i].getColumn() + 1, height)); }
-    int getW(int i) {   return width  * (mod(current[i].getRow(), width))       + (mod(current[i].getColumn() - 1, height)); }
-    int getE(int i) {   return width  * (mod(current[i].getRow(), width))       + (mod(current[i].getColumn() + 1, height)); }
-    int getSW(int i) {  return width * (mod(current[i].getRow() + 1, width))    + (mod(current[i].getColumn() - 1, height)); }
-    int getS(int i) {   return width  * (mod(current[i].getRow() + 1, width))   + (mod(current[i].getColumn(), height)); }
-    int getSE(int i) {  return width * (mod(current[i].getRow() + 1, width))    + (mod(current[i].getColumn() + 1, height)); } */
+    // optimized
+    /* int getNW(int i) {  return width * (mod(current[i].getRow() - 1, width))   + (mod(current[i].getColumn() - 1, height)); } 
+    int getN(int i) {   return width * (mod(current[i].getRow() - 1, width))   + (mod(current[i].getColumn(), height)); } 
+    int getNE(int i) {  return width * (mod(current[i].getRow() - 1, width))   + (mod(current[i].getColumn() + 1, height)); }
+    int getW(int i) {   return width * (mod(current[i].getRow(), width))       + (mod(current[i].getColumn() - 1, height)); }
+    int getE(int i) {   return width * (mod(current[i].getRow(), width))       + (mod(current[i].getColumn() + 1, height)); }
+    int getSW(int i) {  return width * (mod(current[i].getRow() + 1, width))   + (mod(current[i].getColumn() - 1, height)); }
+    int getS(int i) {   return width * (mod(current[i].getRow() + 1, width))   + (mod(current[i].getColumn(), height)); }
+    int getSE(int i) {  return width * (mod(current[i].getRow() + 1, width))   + (mod(current[i].getColumn() + 1, height)); } */
 
-    vector<int> getNeighbours(int i) {
-      long column, row;
-      row = i / width;
-      column = i % width;
-      long x1 = width * (mod(row - 1, width));
-      long x2 = width * (mod(row + 1, width));
-      long x3 = width * row;
-      long y1 = mod(column - 1, height);
-      long y2 = mod(column + 1, height);
+    vector<int> getNeighbours(int i) {   
+      long x1 = width * (mod(current[i].getRow() - 1, width));
+      long x2 = width * (mod(current[i].getRow() + 1, width));
+      long x3 = width * (mod(current[i].getRow(), width));
+      long y1 = mod(current[i].getColumn() - 1, height);
+      long y2 = mod(current[i].getColumn() + 1, height);
+
       vector<int> arr = 
-                {
-                current[x1 + y1],  
-                current[x1 + column], 
-                current[x1 + y2], 
-                current[x3 + y1],   
-                current[x3 + y2],
-                current[x2 + y1],
-                current[x2 + column],
-                current[x2 + y2],
+                {current[x1 + y1].getValue(),
+                current[x1 + current[i].getColumn()].getValue(), 
+                current[x1 + y2].getValue(),
+                current[x3 + y1].getValue(),
+                current[x3 + y2].getValue(),
+                current[x2 + y1].getValue(),
+                current[x2 + current[i].getColumn()].getValue(),
+                current[x2 + y2].getValue(),
                 };
       return arr;
     }
+  /* void getNeighbours(int i, vector<int> &neighbours) {
+    long x1 = width * (mod(current[i].getRow() - 1, width));
+    long x2 = width * (mod(current[i].getRow() + 1, width));
+    long x3 = width * (mod(current[i].getRow(), width));
+    long y1 = mod(current[i].getColumn() - 1, height);
+    long y2 = mod(current[i].getColumn() + 1, height);
+
+    neighbours[0] = current[x1 + y1].getValue();
+    neighbours[1] = current[x1 + current[i].getColumn()].getValue();
+    neighbours[2] = current[x1 + y2].getValue();
+    neighbours[3] = current[x3 + y1].getValue();
+    neighbours[4] = current[x3 + y2].getValue();
+    neighbours[5] = current[x2 + y1].getValue();
+    neighbours[6] = current[x2 + current[i].getColumn()].getValue();
+    neighbours[7] = current[x2 + y2].getValue();
+  } */
 };
 
 class Game {
@@ -199,6 +211,7 @@ class Game {
 
     void execute(int start, int stop) {
       for (int j = 0; j < nSteps; j++) {
+        // vector<int> neighbours(8);
         for (int i = start; i <= stop; i++) {
           int val = table.getCellValue(i);
           int nVal = rule(val, table.getNeighbours(i));
@@ -228,6 +241,7 @@ class Game {
       
       if (nw == 1) {
         for (int j = 0; j < nSteps; j++) {
+          // vector<int> neighbours(8);
           for (int i = 0; i < size; i++) {
             int val = table.getCellValue(i);
             int nVal = rule(val, table.getNeighbours(i));
