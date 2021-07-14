@@ -7,7 +7,6 @@
 #include <cstdlib>
 #include <chrono>
 
-// TODO use arrays for matrix
 using namespace std;
 
 typedef std::chrono::high_resolution_clock Clock;
@@ -215,7 +214,8 @@ class Game {
         size = height * width;
     }
     void run() {
-
+      auto start = Clock::now();
+      
       if (nw == 1) {
         for (int j = 0; j < nSteps; j++) {
           for (int i = 0; i < size; i++) {
@@ -272,7 +272,11 @@ class Game {
 
       for(auto e : tids)
         e->join();
-      cout << "SET" << endl;
+
+      auto end = Clock::now();
+      std::cout << "Computed in: " 
+            << chrono::duration_cast<chrono::milliseconds>(end - start).count()
+            << " milliseconds" << std::endl;
       return;
     }
 };
@@ -328,12 +332,7 @@ int main(int argc, char* argv[]) {
   // automaton setup
   Game g = Game(height, width, rule, nWorkers, nSteps);
   // timing the run
-  auto start = Clock::now();
   g.run();
-  auto end = Clock::now();
 
-  std::cout << "Computed in: " 
-            << chrono::duration_cast<chrono::milliseconds>(end - start).count()
-            << " milliseconds" << std::endl;
   return 0;
 }

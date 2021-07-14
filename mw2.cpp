@@ -451,10 +451,9 @@ class Game {
         ff::error("running farm");
         return -1;
       }
-/*       for (int i = 0; i < nw; i++) {
+      /* for (int i = 0; i < nw; i++) {
         subtables[i].printCurrent();
       } */
-      cout << "SET" << endl;
       return 0;
     }
 };

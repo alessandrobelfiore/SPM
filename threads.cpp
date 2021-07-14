@@ -256,7 +256,9 @@ class Game {
 
       for(auto e : tids)
         e->join();
-      cout << "SET" << endl;
+      
+      /* table.printCurrent();
+      table.printFuture(); */
       return;
     }
 };
