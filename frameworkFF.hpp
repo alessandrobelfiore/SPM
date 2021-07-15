@@ -1,13 +1,14 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <chrono>
 #include <ff/ff.hpp>
 #include <ff/farm.hpp>
 
+typedef std::chrono::high_resolution_clock Clock;
+
 using namespace std;
 using namespace ff;
-
-typedef int (* iFunctionCall)(int args, vector<int> arr);
 
 using pair_t = std::pair<int, int>;
 
@@ -90,6 +91,7 @@ class Table {
       size = height * width;
     }
 
+    // populate rows
     void generate() {
       for (long i = 0; i < height; i++) {
         current_rows->push_back(vector<Cell>());
@@ -392,7 +394,7 @@ class Game {
 
     virtual int rule(int val, vector<int> arr) { return 0; };
     
-    int run() {
+    double run() {
 
       if (nw == 1) {
         for (int j = 0; j < nSteps; j++) {
@@ -420,18 +422,18 @@ class Game {
       E);
       farm.remove_collector();
       farm.wrap_around();
-      ff::ffTime(ff::START_TIME);
+      auto startTime = Clock::now();
+
       if (farm.run_and_wait_end() < 0) {
         ff::error("running farm");
         return -1;
       }
-      ff::ffTime(ff::STOP_TIME);
-      std::cout << "Computed in: " << std::setprecision(8) << ff::ffTime(ff::GET_TIME) << " ms"  << std::endl;
+
+      auto endTime = Clock::now();
+      return chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
       /* for (int i = 0; i < nw; i++) {
         subtables[i].printCurrent();
         subtables[i].printFuture();
       } */
-
-      return 0;
     }
 };

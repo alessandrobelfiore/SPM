@@ -10,7 +10,6 @@
 using namespace std;
 
 typedef std::chrono::high_resolution_clock Clock;
-typedef int (* iFunctionCall)(int args, vector<int> arr);
 
 int mod(int a, int b) {
   int r = a - (int) (a / b) * b;
@@ -46,6 +45,7 @@ class Cell {
 class Table {
   private:
     // TRY shared point
+    // 2D matrix
     Cell* current;
     Cell* future;
     int width;
@@ -130,7 +130,8 @@ class Table {
       long y2 = mod(current[i].getColumn() + 1, height);
 
       vector<int> arr = 
-                {current[x1 + y1].getValue(),
+                {
+                current[x1 + y1].getValue(),
                 current[x1 + current[i].getColumn()].getValue(), 
                 current[x1 + y2].getValue(),
                 current[x3 + y1].getValue(),
@@ -211,6 +212,7 @@ class Game {
 
     void execute(int start, int stop) {
       for (int j = 0; j < nSteps; j++) {
+        // TODO Pass by ref
         // vector<int> neighbours(8);
         for (int i = start; i <= stop; i++) {
           int val = table.getCellValue(i);
@@ -236,7 +238,7 @@ class Game {
     // Passa come copia, se vuoi referenza aggiungi &, oppure && per movable
     virtual int rule(int val, vector<int> arr) { return 0; };
 
-    void run() {
+    double run() {
       //auto startTime = Clock::now();
       
       if (nw == 1) {
@@ -250,7 +252,7 @@ class Game {
           //table.printCurrent();
           table.swapCurrentFuture();
         }
-        return;
+        return 0;
       }
 
       vector<thread*> tids(nw);
@@ -265,6 +267,8 @@ class Game {
         if (i == (nw - 2)) stop += offset + remaining;
         else stop += offset;
       }
+
+      auto startTime = Clock::now();
 
       // if computation is not over
       while (threadsDone.load() != nw) {
@@ -291,14 +295,8 @@ class Game {
       for(auto e : tids)
         e->join();
 
-      /* auto endTime = Clock::now();
-      std::cout << "Computed in: " 
-            << chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count()
-            << " milliseconds" << std::endl; */
-
-      /* table.printCurrent();
-      table.printFuture(); */
-      return;
+      auto endTime = Clock::now();
+      return chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
     }
 
 };

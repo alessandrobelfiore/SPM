@@ -10,7 +10,6 @@
 using namespace std;
 
 typedef std::chrono::high_resolution_clock Clock;
-typedef int (* iFunctionCall)(int args, vector<int> arr);
 
 int mod(int a, int b) {
   int r = a - (int) (a / b) * b;
@@ -215,7 +214,7 @@ class Game {
     // Passa come copia, se vuoi referenza aggiungi &, oppure && per movable
     virtual int rule(int val, vector<int> arr) { return 0; };
 
-    void run() {
+    double run() {
       //auto startTime = Clock::now();
       
       if (nw == 1) {
@@ -228,7 +227,7 @@ class Game {
           //table.printCurrent();
           table.swapCurrentFuture();
         }
-        return;
+        return 0;
       }
 
       vector<thread*> tids(nw);
@@ -243,6 +242,8 @@ class Game {
         if (i == (nw - 2)) stop += offset + remaining;
         else stop += offset;
       }
+
+      auto startTime = Clock::now();
 
       // if computation is not over
       while (threadsDone.load() != nw) {
@@ -269,14 +270,11 @@ class Game {
       for(auto e : tids)
         e->join();
 
-      /* auto endTime = Clock::now();
-      std::cout << "Computed in: " 
-            << chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count()
-            << " milliseconds" << std::endl; */
+      auto endTime = Clock::now();
 
       /* table.printCurrent();
       table.printFuture(); */
-      return;
+      return chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
     }
 
 };

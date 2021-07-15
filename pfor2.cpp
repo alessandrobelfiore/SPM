@@ -199,11 +199,11 @@ class Game {
           }
           vectors[k].clear();
         }
-        table.printCurrent();
-        table.swapCurrentFuture();
+        //table.printCurrent();
+        //table.swapCurrentFuture();
         /* cout << "currently index: " << i << endl; */
       }
-      table.printCurrent();
+      //table.printCurrent();
       cout << "SET" << endl;
       return;
     }

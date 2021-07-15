@@ -178,11 +178,10 @@ class Game {
                             int nVal = rule(val, table.getNeighbours(i));
                             table.setFuture(i, nVal);
                           });
-        table.printCurrent();
-        table.swapCurrentFuture();
+        //table.printCurrent();
+        //table.swapCurrentFuture();
       }
-      table.printCurrent();
-      cout << "SET" << endl;
+      //table.printCurrent();
       return;
     }
 };

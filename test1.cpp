@@ -5,7 +5,8 @@
 
 // compile using array of objects to represent cells
 #ifndef INTVECT 
-#include "frame_cells.hpp"
+//#include "frame_cells.hpp"
+#include "frame_2D_Cells.hpp"
 #endif
 // compile using array of int to represent cells
 #ifdef INTVECT
@@ -57,21 +58,27 @@ int main(int argc, char* argv[]) {
   }
 
   // TODO include in framework
-  vector<long long> timings(nRuns);
-  long long max, avg, sum = 0;
-  long long min = LONG_MAX;
+  vector<long> timings(nRuns);
+  vector<long> computations(nRuns);
+  long max = 0;
+  long avg = 0;
+  long avgC = 0;
+  long sum = 0;
+  long sumC = 0; 
+  long min = LONG_MAX;
 
   for (int i = 0; i < nRuns; i++) {
     // automaton setup
     Test g = Test(height, width, nWorkers, nSteps);
     // timing the run
     auto startTime = Clock::now();
-    g.run();
+    computations[i] = g.run();
     auto endTime = Clock::now();
     timings[i] = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
     if (timings[i] > max) max = timings[i];
     if (timings[i] < min) min = timings[i];
     sum += timings[i];
+    sumC += computations[i];
   }
 
 /*   for (int i = 0; i < nRuns; i++) {
@@ -79,11 +86,13 @@ int main(int argc, char* argv[]) {
     sum += timings[i];
   } */
 
-  avg = sum / nRuns;
+  avg   = sum / nRuns;
+  avgC  = sumC / nRuns;
 
   cout << "Minimum time: " << min << " ms" << endl;
   cout << "Maximum time: " << max << " ms" << endl;
   cout << "Average time: " << avg << " ms" << endl;
+  cout << "Average time comp: " << avgC << " ms" << endl;
 
   return 0;
 }

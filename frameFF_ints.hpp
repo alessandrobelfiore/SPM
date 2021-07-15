@@ -1,13 +1,14 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <chrono>
 #include <ff/ff.hpp>
 #include <ff/farm.hpp>
 
+typedef std::chrono::high_resolution_clock Clock;
+
 using namespace std;
 using namespace ff;
-
-typedef int (* iFunctionCall)(int args, vector<int> arr);
 
 using pair_t = std::pair<int, int>;
 
@@ -17,46 +18,11 @@ int mod(int a, int b) {
   return r < 0 ? (r + b) : r;
 }
 
-/* Class representing a cell
-  index:  index in the 1D matrix 
-  row:    row index in the 2D matrix
-  column: column index in the 2D matrix
-  value:  value contained in the cell  */
-/* class Cell {
-  private: 
-    int index;
-    int row;
-    int column;
-    int value;
-    
-  public:
-    Cell(int index, int value, int row, int column): 
-      index(index), value(value), row(row), column(column) {}
-
-    Cell(int index, int row, int column):
-      index(index), row(row), column(column) {}
-
-    // getters
-    int getIndex() { return index; }
-    int { return value; }
-    int getRow() { return row; }
-    int getColumn() { return column; }
-
-    // setters
-    void setValue(int v) { value = v; }
-
-    bool operator== (Cell& rhs) {
-      if (index == rhs.index && value == rhs.value) return true;
-      else return false;
-    }
-};
- */
 /* redefining vectors of cells as rows */
 using row = std::vector<int>;
 /* redefining pairs of vectors of cells*/
 using pair_v = std::pair<vector<int>, vector<int>>;
 
-// parametric? FIXME later
 pair_v make_start_task() {
   auto tmp = new vector<int>;
   tmp->push_back(-1);
@@ -365,7 +331,7 @@ class Game {
     }
 
     Game(long height, long width, int nw, int nSteps):
-          nw(nw), nSteps(nSteps) {
+        nw(nw), nSteps(nSteps) {
         table = Table(height, width);
         table.generate();
         size = height * width;
@@ -392,7 +358,7 @@ class Game {
 
     virtual int rule(int val, vector<int> arr) { return 0; };
     
-    int run() {
+    double run() {
 
       if (nw == 1) {
         for (int j = 0; j < nSteps; j++) {
@@ -410,7 +376,7 @@ class Game {
       // TODO try lambda
       // auto lam = [&](int float) { rule(); }
       ff::ff_Farm<> farm( [&]() {
-        std::vector<std::unique_ptr<ff_node> > W;
+        vector<std::unique_ptr<ff_node> > W;
         for(int i = 0; i < nw; i++) {
           W.push_back(ff::make_unique<Worker<Game>>(this, &subtables[i], i));
         }
@@ -419,18 +385,18 @@ class Game {
       E);
       farm.remove_collector();
       farm.wrap_around();
-      ff::ffTime(ff::START_TIME);
+      auto startTime = Clock::now();
+
       if (farm.run_and_wait_end() < 0) {
         ff::error("running farm");
         return -1;
       }
-      ff::ffTime(ff::STOP_TIME);
-      std::cout << "Computed in: " << std::setprecision(8) << ff::ffTime(ff::GET_TIME) << " ms"  << std::endl;
+
+      auto endTime = Clock::now();
+      return chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
       /* for (int i = 0; i < nw; i++) {
         subtables[i].printCurrent();
         subtables[i].printFuture();
       } */
-
-      return 0;
     }
 };
