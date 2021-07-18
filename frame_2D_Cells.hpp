@@ -7,10 +7,11 @@
 #include <cstdlib>
 #include <chrono>
 
-using namespace std;
-
 typedef std::chrono::high_resolution_clock Clock;
+
+using namespace std;
 using pair_t = std::pair<int, int>;
+
 
 int mod(int a, int b) {
   int r = a - (int) (a / b) * b;

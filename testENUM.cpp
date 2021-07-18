@@ -3,15 +3,7 @@
 #include <chrono>
 #include <climits>
 
-// compile using array of objects to represent cells
-#ifndef INTVECT 
-#include "frame_2D_Cells.hpp"
-#endif
-// compile using array of int to represent cells
-#ifdef INTVECT
-#include "frame_ints.hpp"
-#endif
-
+#include "frame_ENUM.hpp"
 
 using namespace std;
 typedef std::chrono::high_resolution_clock Clock;
@@ -31,6 +23,19 @@ class Test: public Game {
       if (value == 0 && sum == 3) { return 1; }
       if (sum > 3) { return 0; }
       else return 0;
+    }
+
+    state rule(state value, vector<state> neighValues) {
+      int sum = 0;
+      for (int i = 0; i < 8; i++) {
+        //sum = neighValues[i] == one ? sum += 1 : sum;
+        sum += neighValues[i];
+      }
+      if (sum < 2) { return zero; }
+      if ((sum == 2 || sum == 3) && value == 1) { return one; }
+      if (value == 0 && sum == 3) { return one; }
+      if (sum > 3) { return zero; }
+      else return zero;
     }
 };
 
@@ -79,11 +84,6 @@ int main(int argc, char* argv[]) {
     sum += timings[i];
     sumC += computations[i];
   }
-
-/*   for (int i = 0; i < nRuns; i++) {
-    cout << "Run number " << i + 1 << " computed in: " << timings[i] << " ms" << endl;
-    sum += timings[i];
-  } */
 
   avg   = sum / nRuns;
   avgC  = sumC / nRuns;

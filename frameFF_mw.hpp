@@ -284,6 +284,9 @@ class Game {
 
       auto startTime = Clock::now();
 
+      #ifdef NOMAP
+      farm.no_mapping();
+      #endif
       if (farm.run_and_wait_end() < 0) {
         ff::error("running farm");
         return -1;
