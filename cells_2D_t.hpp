@@ -77,6 +77,24 @@ class Table {
       size = height * width;
     }
 
+    // Constructor initializing the table with input values
+    Table(long height, long width, vector<int> input):
+      height(height), width(width) {
+      size = height * width;
+      for (long i = 0; i < height; i++) {
+        current_rows->push_back(vector<Cell>());
+        future_rows->push_back(vector<Cell>());
+      }
+
+      for (long i = 0; i < size; i++) {
+        long column, row;
+        row = i / width;
+        column = i % width;
+        current_rows->at(row).push_back(Cell(i, input[i], row, column));
+        future_rows->at(row).push_back(Cell(i, 0, row, column));
+      }
+    }
+
     /**
      * Populate the matrix with random values cells
      */

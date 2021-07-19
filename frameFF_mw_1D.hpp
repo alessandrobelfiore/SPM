@@ -9,6 +9,7 @@
 // ints are slightly more performing
 #include "ints_1D_t.hpp"
 
+// redefining clock from chrono library for easier use
 typedef std::chrono::high_resolution_clock Clock;
 
 /* Redefining pairs of ints*/
@@ -17,49 +18,60 @@ using pair_t = std::pair<int,int>;
 using namespace std;
 using namespace ff;
 
+/**
+ * Class representing the worker
+ * 
+ * @tparam the object from which we get the implemented rule to apply
+ */
 template<class C>
 struct Worker: ff_node_t<pair_t, int> {
-  int n = 0;
-  C* c;
-  Table* table;
+  int n = 0; // n is just a placeholder
+  C* c; // instance of the class from which we get the rule method
+  Table* table; // reference to the table
   long start, stop;
 
+  // Constructor
   Worker(C* c, Table* table): 
     c(c), table(table) {
       n = 0;
   }
 
   int* svc(pair_t* in) {
-    /* cout << "received " << in->first << " " << in->second <<  endl; */ 
+    // First task received contains a pair<int> (start, stop) 
     if (in-> first != -1 && in->second != -1) {
       start = in->first;
       stop = in->second;
       /* cout << start << " " << stop << endl; */
     }
-    /* cout << "setting table" << endl; */
+    // Subsequent tasks contain (-1, -1) and are used for synchronization
     for (long i = start; i <= stop; i++) {
       int val = table->getCellValue(i);
       int nVal = (c->rule)(val, table->getNeighbours(i));
       table->setFuture(i, nVal);
       /* cout << "setting cell: " << i << " with value: " << nVal << endl; */
     }
-    //n++;
     return &n;
   }
 };
 
+/**
+ * Class representing the emitter / master
+ */
 struct Emitter: ff_monode_t<int, pair_t> {
 
-  Table* table;
+  Table* table; // reference to the table
   int offset, remaining, threadsR, nw, nSteps;
   long start, stop, size;
   pair_t* pairs = nullptr; // vector of pairs, one for each Worker
-  pair_t START_TASK = {-1, -1};
+  pair_t START_TASK = {-1, -1}; // placeholder value to signal the workers to start working
+  
+  // Constructor
   Emitter(const int nSteps, const int nw, const long size, Table* table): 
     nSteps(nSteps), nw(nw), size(size), table(table) {
       pairs = new pair_t[nw];
   }
 
+  // Destructor
   ~Emitter() { if (pairs) delete [] pairs; }
 
   int svc_init() {
@@ -72,38 +84,38 @@ struct Emitter: ff_monode_t<int, pair_t> {
   }
 
   pair_t* svc(int *s) {
-    // first execution, split grid within workers
+    // If this is the first execution, we split the work between the workers 
     if (s == nullptr) {
       for (int i = 0; i < nw; i++) {
-        /* std::cout << "sending: " << start << " " << stop << "to thread :" << i << endl; */
         pairs[i] = {start, stop};
-        ff_send_out_to(&pairs[i], i);
+        ff_send_out_to(&pairs[i], i); // send to worker i, the pair of indexes
         start += offset;
-        if (i == (nw - 2)) stop += offset + remaining;
+        if (i == (nw - 2)) stop += offset + remaining; // fix for divisible dimensions
         else stop += offset;
       }
       return GO_ON;
     }
-    // if all threads have replied back
+    // If all threads have replied back
     else if (++threadsR == nw && nSteps > 1) {
-      /* cout << "All threads ready for next step" << endl; */
       threadsR = 0;
       nSteps--;
-      //table->printCurrent();
       table->swapCurrentFuture();
       broadcast_task(&START_TASK);
     } 
     else if (threadsR == nw && nSteps == 1) {
-      /* cout << "All threads done" << endl; */
-      //table->printCurrent();
-      //table->printFuture();
       broadcast_task(EOS);
     }
-    // else we still have to wait some threads
+    // Else we still have to wait some threads
     return GO_ON;
   }
 };
 
+/**
+ * Class representing the main access point to the framework
+ * 
+ * Contains a Table, a method rule, and the logic necessary to compute the rule on all cells
+ * of the table in parallel
+ */
 class Game {
   private:
     // game table
@@ -143,6 +155,13 @@ class Game {
       size = height * width;
     }
 
+    // Constructor with initialization of the matrix values
+    Game(long height, long width, int nw, vector<int> input):
+      nw(nw) {
+      table = Table(height, width, input);
+      size = height * width;
+    }
+
     /**
      * Function containing the algorithm to use to compute the next state of a cell
      * 
@@ -173,17 +192,17 @@ class Game {
         return 0;
       }
 
-      Emitter E(nSteps, nw, size, &table);
+      Emitter E(nSteps, nw, size, &table); // creating the emitter
       ff::ff_Farm<> farm( [&]() {
         vector<std::unique_ptr<ff_node> > W;
         for(int i = 0; i < nw; i++) {
-          W.push_back(ff::make_unique<Worker<Game>>(this, &table));
+          W.push_back(ff::make_unique<Worker<Game>>(this, &table)); // creating the workers
         }
         return W;
       } (),
       E);
-      farm.remove_collector();
-      farm.wrap_around();
+      farm.remove_collector(); 
+      farm.wrap_around(); // wrap around to create a MW pattern
 
       auto startTime = Clock::now();
 

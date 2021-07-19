@@ -18,6 +18,9 @@ class Test: public Game {
     Test(int height, int width, int nw) 
       : Game { height, width, nw } {}
 
+    Test(int height, int width, int nw, vector<int> input) 
+      : Game { height, width, nw, input } {}
+
     int rule(int value, vector<int> neighValues) {
       int sum = 0;
       for (int i = 0; i < 8; i++) {
@@ -66,9 +69,14 @@ int main(int argc, char* argv[]) {
   long sumC = 0; 
   long min = LONG_MAX;
 
+  vector<int> input (height * width);
+  for (int i = 0; i < height * width; i++) {
+    input[i] = rand() % 2;
+  }
+
+  // automaton setup
+  Test g = Test(height, width, nWorkers, input);
   for (int i = 0; i < nRuns; i++) {
-    // automaton setup
-    Test g = Test(height, width, nWorkers);
     // timing the run
     auto startTime = Clock::now();
     computations[i] = g.run(nSteps);

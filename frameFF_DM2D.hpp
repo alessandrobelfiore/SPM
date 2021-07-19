@@ -5,7 +5,7 @@
 #include <ff/ff.hpp>
 #include <ff/farm.hpp>
 
-#include "ints_2D.hpp"
+#include "ints_2D_t.hpp"
 //#include "cells_2D_t.hpp" // not working atm but tested to be inferior
 
 typedef std::chrono::high_resolution_clock Clock;
@@ -16,6 +16,10 @@ using namespace ff;
 /* Redefining pair of vectors of ints*/
 using pair_v = std::pair<vector<int>, vector<int>>;
 
+/**
+ * Utility function to create a token compatible with the workers,
+ * used to start the workers but disregarded in value
+ */
 pair_v make_start_task() {
   auto tmp = new vector<int>;
   tmp->push_back(-1);
@@ -26,12 +30,11 @@ pair_v make_start_task() {
 
 auto START_TASK = make_start_task();
 
-/* Class representing a worker node
-  id:     worker id
-  rule:   rule to apply to get the next state of the cell
-  table:  reference to the table(subtable) to work on
-  start:  starting index of the cells to compute
-  stop:   last index of the cells to compute */
+/**
+ * Class representing the worker
+ * 
+ * @tparam the object from which we get the implemented rule to apply
+ */
 template<class C>
 struct Worker: ff_node_t<pair_v, int> {
   int id;
@@ -71,19 +74,17 @@ struct Worker: ff_node_t<pair_v, int> {
   }
 };
 
-/* Class representing the emitter node
-  table:      reference to the table
-  subtables:  reference to the array of subtables composing the original table
-  pairs:      reference to the vector of pairs of rows to be sent to each worker
-  threads_r:  number representing the amount of workers
-  nw:         number of workers
-  nSteps:     number of steps */
+/**
+ * Class representing the emitter / master
+ */
 struct Emitter: ff_monode_t<int, pair_v> {
 
   Table* table;
   vector<Table>* subtables;
   vector<pair_v>* pairs;
   int threads_r, nw, nSteps;
+
+  // Constructor
   Emitter(const int nSteps, const int nw, const long size, Table* table, vector<Table>* subtables): 
     nSteps(nSteps), nw(nw), table(table), subtables(subtables) {
       threads_r = 0;
@@ -92,24 +93,24 @@ struct Emitter: ff_monode_t<int, pair_v> {
 
   pair_v* svc(int *s) {
 
+    // At the first execution, start all workers
     if (s == nullptr) {
       broadcast_task(&START_TASK);
       nSteps --;
       return GO_ON;
     }
     else {
-      // receive thread ready id
-      // send to neighbouring thread
-      /* cout << "received: " << *s << endl; */
       threads_r ++;
-
+      // If the computation is over, broadcast EOS
       if (nSteps <= 0) {
         broadcast_task(EOS);
       }
       else {
         // this section should be locked
+        // If all threads are in ready state
         if (threads_r == nw) {
           pairs->clear();
+          // For each worker, send to it the phantom rows it needs
           for (int i = 0; i < nw; i++) {
             auto tmp = subtables->at(mod(i + 1, nw));
             auto tmp2 = subtables->at(mod(i - 1, nw));
@@ -122,7 +123,6 @@ struct Emitter: ff_monode_t<int, pair_v> {
           nSteps --;
           broadcast_task(&START_TASK);
         }
-
       }
       return GO_ON;
     }
@@ -170,6 +170,7 @@ class Game {
       return *this;
     }
 
+    // Constructor initializing table with random values
     Game(long height, long width, int nw):
         nw(nw) {
         table = Table(height, width);
@@ -180,12 +181,34 @@ class Game {
         long s_width = width;
         long remaining  = height % nw;
 
-        /* table.printCurrent(); */
+        if (nw != 1) {
+          for (int i = 0; i < nw; i++) {
+            if (i == (nw - 1)) s_height += remaining;
+            subtables.push_back(Table(s_height + 2, s_width));
+            // starting from one row above and one below to include ghost rows
+            for (int j = -1; j < s_height + 1; j++) {
+              subtables[i].getCurrent()->push_back(table.getRow(mod(j + (i * s_height_avg), height)));
+              subtables[i].getFuture()->push_back(table.getRow(mod(j + (i * s_height_avg), height)));
+            }
+            /* subtables[i].printCurrent(); */
+          }
+        }
+    }
+
+    // Constructor initializing table with input vector
+    Game(long height, long width, int nw, vector<int> input):
+        nw(nw) {
+        table = Table(height, width, input);
+        size = height * width;
+        long s_height_avg = height / nw; // avg height of the subtables
+        long s_height = s_height_avg;   // actual height of the current subtable (including the last one)
+        long s_width = width;
+        long remaining  = height % nw;
 
         if (nw != 1) {
           for (int i = 0; i < nw; i++) {
             if (i == (nw - 1)) s_height += remaining;
-            subtables.push_back(Table(s_height + 2, s_width)); // TODO try shallow copy
+            subtables.push_back(Table(s_height + 2, s_width));
             // starting from one row above and one below to include ghost rows
             for (int j = -1; j < s_height + 1; j++) {
               subtables[i].getCurrent()->push_back(table.getRow(mod(j + (i * s_height_avg), height)));
@@ -214,8 +237,6 @@ class Game {
       }
 
       Emitter E(nSteps, nw, size, &table, &subtables);
-      // TODO try lambda
-      // auto lam = [&](int float) { rule(); }
       ff::ff_Farm<> farm( [&]() {
         vector<std::unique_ptr<ff_node> > W;
         for(int i = 0; i < nw; i++) {

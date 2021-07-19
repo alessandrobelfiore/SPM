@@ -7,7 +7,8 @@
 #include <cstdlib>
 #include <chrono>
 
-#include "cells_2D_t.hpp"
+#include "ints_2D_t.hpp"
+//#include "cells_2D_t.hpp"
 
 // redefining clock from chrono library for easier use
 typedef std::chrono::high_resolution_clock Clock;
@@ -70,6 +71,14 @@ class Game {
       height(height), width(width), nw(nw) {
         table = Table(height, width);
         table.generate();
+        size = height * width;
+        threadsReady = 0;
+        threadsDone = 0;
+    }
+
+    Game(int height, int width, int nw, vector<int> input):
+      height(height), width(width), nw(nw) {
+        table = Table(height, width, input);
         size = height * width;
         threadsReady = 0;
         threadsDone = 0;
@@ -167,6 +176,9 @@ class Game {
         // send wake up signals
         nextStep.notify_all();
       }
+
+      threadsReady.exchange(0);
+      threadsDone.exchange(0);
 
       for(auto e : tids)
         e->join();

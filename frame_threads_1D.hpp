@@ -73,6 +73,15 @@ class Game {
         threadsDone = 0;
     }
 
+    // Constructor with initializiation of the matrix values
+    Game(int height, int width, int nw, vector<int> input):
+      nw(nw) {
+        table = Table(height, width, input);
+        size = height * width;
+        threadsReady = 0;
+        threadsDone = 0;
+    }
+
     /**
      * Function passed to each thread to compute the algorithm on the cells
      * 
@@ -119,6 +128,7 @@ class Game {
       nSteps = steps;
       
       if (nw == 1) {
+        auto startTime = Clock::now();
         for (int j = 0; j < nSteps; j++) {
           for (int i = 0; i < size; i++) {
             int val = table.getCellValue(i);
@@ -128,7 +138,8 @@ class Game {
           //table.printCurrent();
           table.swapCurrentFuture();
         }
-        return 0;
+         auto endTime = Clock::now();
+        return chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
       }
 
       vector<thread*> tids(nw);
@@ -163,6 +174,9 @@ class Game {
         // send wake up signals
         nextStep.notify_all();
       }
+
+      threadsReady.exchange(0);
+      threadsDone.exchange(0);
 
       for(auto e : tids)
         e->join();

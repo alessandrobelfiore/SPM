@@ -82,6 +82,21 @@ class Table {
       }
     }
 
+    // Constructor initializing the table with input values
+    Table(int height, int width, vector<int> input):
+      height(height), width(width) {
+      int size = height * width;
+      int column, row;
+      current = new Cell[size];
+      future = new Cell[size];
+      for (int i = 0; i < size; i++) {
+        row = i / width;
+        column = i % width;
+        current[i] = Cell(i, input[i], row, column);
+        future[i] = Cell(i, 0, row, column);
+      }
+    }
+
     // Getters
     Cell* getCurrent() { return current; }
 

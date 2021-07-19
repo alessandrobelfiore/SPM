@@ -18,6 +18,9 @@ typedef std::chrono::high_resolution_clock Clock;
 
 class Test: public Game {
   public:
+    Test(int height, int width, int nw, vector<int> input) 
+      : Game { height, width, nw, input } {}
+
     Test(int height, int width, int nw) 
       : Game { height, width, nw } {}
 
@@ -56,7 +59,7 @@ int main(int argc, char* argv[]) {
     nRuns  = atoi(argv[5]);
   }
 
-  // TODO include in framework
+  // TODO include in framework ?
   vector<long> timings(nRuns);
   vector<long> computations(nRuns);
   long max = 0;
@@ -66,11 +69,18 @@ int main(int argc, char* argv[]) {
   long sumC = 0; 
   long min = LONG_MAX;
 
+  vector<int> input (height * width);
+  for (int i = 0; i < height * width; i++) {
+    input[i] = rand() % 2;
+  }
+
+  // automaton setup
+  Test g = Test(height, width, nWorkers);
+  //Test g = Test(height, width, nWorkers, input);
   for (int i = 0; i < nRuns; i++) {
-    // automaton setup
-    Test g = Test(height, width, nWorkers);
     // timing the run
     auto startTime = Clock::now();
+    //cout << "run n: " << i << endl;
     computations[i] = g.run(nSteps);
     auto endTime = Clock::now();
     timings[i] = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
