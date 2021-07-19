@@ -5,22 +5,15 @@
 #include <ff/ff.hpp>
 #include <ff/farm.hpp>
 
+#include "ints_2D.hpp"
+//#include "cells_2D_t.hpp" // not working atm but tested to be inferior
+
 typedef std::chrono::high_resolution_clock Clock;
 
 using namespace std;
 using namespace ff;
 
-using pair_t = std::pair<int, int>;
-
-/* Redefining the module operator */
-int mod(int a, int b) {
-  int r = a - (int) (a / b) * b;
-  return r < 0 ? (r + b) : r;
-}
-
-/* redefining vectors of cells as rows */
-using row = std::vector<int>;
-/* redefining pairs of vectors of cells*/
+/* Redefining pair of vectors of ints*/
 using pair_v = std::pair<vector<int>, vector<int>>;
 
 pair_v make_start_task() {
@@ -32,157 +25,6 @@ pair_v make_start_task() {
 }
 
 auto START_TASK = make_start_task();
-
-/* Class representing a table
-  current_rows: vector of rows representing the current state of the table
-  future_rows:  vector of rows representing the future state of the table
-  width:        width of the table
-  height:       height of the table
-  size:         size of the table */
-class Table {
-  private:
-    vector<row>* current_rows = new vector<row>();
-    vector<row>* future_rows = new vector<row>();
-    long width;
-    long height;
-    long size;
-
-  public:
-    Table() {}
-
-    // constructor
-    Table(long height, long width):
-      height(height), width(width) {
-      size = height * width;
-    }
-
-    void generate() {
-      for (long i = 0; i < height; i++) {
-        current_rows->push_back(vector<int>());
-        future_rows->push_back(vector<int>());
-      }
-
-      for (long i = 0; i < size; i++) {
-        long column, row;
-        row = i / width;
-        column = i % width;
-        current_rows->at(row).push_back(rand() % 2);
-        future_rows->at(row).push_back(0);
-      }
-    }
-
-    vector<row>* getCurrent() { return current_rows; }
-    vector<row>* getFuture() { return future_rows; }
-
-    void setFuture(long row, long column, int value) {
-      future_rows->at(row)[column] = value;
-    }
-
-    void setCurrent(long row, long column, int value) {
-      current_rows->at(row)[column] = value;
-    }
-
-    void setFuture(long i, int value) {
-      long column, row;
-      row = i / width;
-      column = i % width;
-      future_rows->at(row)[column] = value;
-    }
-
-    void setCurrent(long i, int value) {
-      long column, row;
-      row = i / width;
-      column = i % width;
-      current_rows->at(row)[column] = value;
-    }
-
-    int getCellValue(long row, long column) {
-      return current_rows->at(row)[column];
-    }
-    int getCellValue(long i) {
-      long column, row;
-      row = i / width;
-      column = i % width;
-      return current_rows->at(row)[column];
-    }
-    
-    long getSize() { return size; }
-    long getHeight() { return height; }
-    long getWidth() { return width; }
-
-    row getRow(long row) {
-      return current_rows->at(row);
-    }
-    
-    // print current table config
-    void printCurrent() {
-      for (long i = 0; i < height; i++) {
-        for (long j = 0; j < width; j++) {
-          int v = current_rows->at(i).at(j);
-          if (v == 0) cout << "-";
-          else cout << "x";
-        }
-        cout << endl;
-      }
-      cout << endl;
-    }
-
-    // print "future" table config
-    void printFuture() {
-      for (long i = 0; i < height; i++) {
-        for (long j = 0; j < width; j++) {
-          int v = future_rows->at(i).at(j);
-          if (v == 0) cout << "-";
-          else cout << "x";
-        }
-        cout << endl;
-      }
-      cout << endl;
-    }
-
-    void swapCurrentFuture() {
-      auto tmp = current_rows;
-      current_rows = future_rows;
-      future_rows = tmp;
-    }
-
-    pair_t getNW(long row, long column) { return {mod(row - 1, height), mod(column - 1, width)}; } 
-    pair_t getN(long row, long column) { return {mod(row - 1, height), column}; } 
-    pair_t getNE(long row, long column) { return {mod(row - 1, height), mod(column + 1, width)}; }
-    pair_t getW(long row, long column) { return {row, mod(column - 1, width)}; }
-    pair_t getE(long row, long column) { return {row, mod(column + 1, width)}; }
-    pair_t getSW(long row, long column) { return {mod(row + 1, height), mod(column - 1, width)}; }
-    pair_t getS(long row, long column) { return {mod(row + 1, height), column}; }
-    pair_t getSE(long row, long column) { return {mod(row + 1, height), mod(column + 1, width)}; }
-
-    /* vector<int> getNeighbours(long row, long column) {
-      vector<int> arr = 
-                {current_rows->at(getNW(row, column).first).at(getNW(row, column).second).getValue(),  current_rows->at(getN(row, column).first).at(getN(row, column).second).getValue(), current_rows->at(getNE(row, column).first).at(getNE(row, column).second).getValue(), 
-                 current_rows->at(getW(row, column).first).at(getW(row, column).second).getValue(),   current_rows->at(getE(row, column).first).at(getE(row, column).second).getValue(),
-                 current_rows->at(getSW(row, column).first).at(getSW(row, column).second).getValue(),  current_rows->at(getS(row, column).first).at(getS(row, column).second).getValue(), current_rows->at(getSE(row, column).first).at(getSE(row, column).second).getValue() };
-      return arr;
-    } */
-
-    /* vector<int> getNeighbours2(long row, long column) {
-      vector<int> arr = 
-        {current_rows->at(row - 1)[column - 1].getValue(), current_rows->at(row - 1)[column].getValue(), current_rows->at(row - 1)[column + 1].getValue(),
-        current_rows->at(row)[column - 1].getValue(), current_rows->at(row)[column + 1].getValue(),
-        current_rows->at(row + 1)[column - 1].getValue(), current_rows->at(row + 1)[column].getValue(), current_rows->at(row + 1)[column + 1].getValue(),
-        };
-      return arr;
-    } */
-
-    vector<int> getNeighbours(int i) {
-      long column, row;
-      row = i / width;
-      column = i % width;
-      vector<int> arr = 
-                {current_rows->at(getNW(row, column).first).at(getNW(row, column).second),  current_rows->at(getN(row, column).first).at(getN(row, column).second), current_rows->at(getNE(row, column).first).at(getNE(row, column).second), 
-                 current_rows->at(getW(row, column).first).at(getW(row, column).second),   current_rows->at(getE(row, column).first).at(getE(row, column).second),
-                 current_rows->at(getSW(row, column).first).at(getSW(row, column).second),  current_rows->at(getS(row, column).first).at(getS(row, column).second), current_rows->at(getSE(row, column).first).at(getSE(row, column).second) };
-      return arr;
-    }
-};
 
 /* Class representing a worker node
   id:     worker id
@@ -201,13 +43,11 @@ struct Worker: ff_node_t<pair_v, int> {
     g(g), table(table), id(id) {
       start = table->getWidth();
       stop = table->getSize() - table->getWidth();
-      /* rule = g->rule; */
-      //rule = g.*function;
      /*  cout << "start " << start << " stop " << stop << endl; */
     }
 
   int* svc(pair_v* in) {
-    // in = pair of vector<Cell> representing top and bot ghost rows
+    // in = pair of vector<int> representing top and bot ghost rows
     // receive ghost rows from emitter
     // and set
     if (in != &START_TASK) {

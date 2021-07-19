@@ -10,19 +10,26 @@ typedef std::chrono::high_resolution_clock Clock;
 using namespace std;
 using namespace ff;
 
+/* Redefining pairs of ints*/
 using pair_t = std::pair<int, int>;
 
-/* Redefining the module operator */
+/**
+ * Redefining of the modulo operation to properly work on negative values
+ * 
+ * @param a left-handside of the modulo operation
+ * @param b right-handside of the modulo operation
+ * @returns the modulo operation from a and b
+ */
 int mod(int a, int b) {
   int r = a - (int) (a / b) * b;
   return r < 0 ? (r + b) : r;
 }
 
-/* Class representing a cell
-  index:  index in the 1D matrix 
-  row:    row index in the 2D matrix
-  column: column index in the 2D matrix
-  value:  value contained in the cell  */
+/**
+ * Class modeling the matrix
+ * 
+ * Contains the current state of the matrix and its future state on the next step
+ */
 class Cell {
   private: 
     int index;
@@ -52,12 +59,12 @@ class Cell {
     }
 };
 
-/* redefining vectors of cells as rows */
+/* Redefining vector of cells as row */
 using row = std::vector<Cell>;
-/* redefining pairs of vectors of cells*/
+
+/* Redefining pairs of vectors of cells*/
 using pair_v = std::pair<vector<Cell>, vector<Cell>>;
 
-// parametric? FIXME later
 pair_v make_start_task() {
   auto tmp = new vector<Cell>;
   tmp->push_back(Cell(0,-1,0,0));

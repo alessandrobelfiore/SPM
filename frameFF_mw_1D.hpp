@@ -5,130 +5,17 @@
 #include <ff/ff.hpp>
 #include <ff/farm.hpp>
 
+//#include "cells_1D_t.hpp"
+// ints are slightly more performing
+#include "ints_1D_t.hpp"
+
 typedef std::chrono::high_resolution_clock Clock;
+
+/* Redefining pairs of ints*/
+using pair_t = std::pair<int,int>;
 
 using namespace std;
 using namespace ff;
-
-using pair_t = std::pair<int,int>;
-
-int mod(int a, int b) {
-  int r = a - (int) (a / b) * b;
-  return r < 0 ? (r + b) : r;
-}
-
-/* Class representing a cell
-  index:  index in the 1D matrix 
-  row:    row index in the 2D matrix
-  column: column index in the 2D matrix
-  value:  value contained in the cell  */
-class Cell {
-  private: 
-    int index;
-    int row;
-    int column;
-    int value;
-    
-  public:
-    Cell(int index, int value, int row, int column): 
-      index(index), value(value), row(row), column(column) {}
-
-    Cell(int index, int row, int column):
-      index(index), row(row), column(column) {}
-
-    // getters
-    int getIndex() { return index; }
-    int getValue() { return value; }
-    int getRow() { return row; }
-    int getColumn() { return column; }
-
-    // setters
-    void setValue(int v) { value = v; }
-};
-
-class Table {
-  private:
-    vector<Cell>* current = new vector<Cell>();
-    vector<Cell>* future = new vector<Cell>();
-    long width;
-    long height;
-
-  public:
-    Table() {}
-
-    // constructor
-    Table(long height, long width):
-      height(height), width(width) {
-      long size = height * width;
-      long column, row;
-      for (long i = 0; i < size; i++) {
-        row = i / width;
-        column = i % width;
-        current->push_back(Cell(i, rand() % 2, row, column));
-        future->push_back(Cell(i, 0, row, column));
-      }
-    }
-
-    vector<Cell>* getCurrent() { return current; }
-
-    void setFuture(long index, int value) {
-      future->at(index).setValue(value);
-    }
-
-    int getCellValue(long i) {
-      return current->at(i).getValue();
-    }
-
-    // print current table config
-    void printCurrent() {
-      for (long i = 0; i < height; i++) {
-        for (long j = 0; j < width; j++) {
-          int v = current->at(i * width + j).getValue();
-          if (v == 0) cout << "-";
-          else cout << "x";
-        }
-        cout << endl;
-      }
-      cout << endl;
-    }
-
-    // print "future" table config
-    void printFuture() {
-      for (long i = 0; i < height; i++) {
-        for (long j = 0; j < width; j++) {
-          int v = future->at(i * width + j).getValue();
-          if (v == 0) cout << "-";
-          else cout << "x";
-        }
-        cout << endl;
-      }
-      cout << endl;
-    }
-
-    void swapCurrentFuture() {
-      auto tmp = current;
-      current = future;
-      future = tmp;
-    }
-
-    int getNW(long i) { return width * (mod(current->at(i).getRow() - 1, width))   + (mod(current->at(i).getColumn() - 1, height)); } 
-    int getN(long i) { return width  * (mod(current->at(i).getRow() - 1, width))   + (mod(current->at(i).getColumn(), height)); } 
-    int getNE(long i) { return width * (mod(current->at(i).getRow() - 1, width))   + (mod(current->at(i).getColumn() + 1, height)); }
-    int getW(long i) { return width  * (mod(current->at(i).getRow(), width))       + (mod(current->at(i).getColumn() - 1, height)); }
-    int getE(long i) { return width  * (mod(current->at(i).getRow(), width))       + (mod(current->at(i).getColumn() + 1, height)); }
-    int getSW(long i) { return width * (mod(current->at(i).getRow() + 1, width))   + (mod(current->at(i).getColumn() - 1, height)); }
-    int getS(long i) { return width  * (mod(current->at(i).getRow() + 1, width))   + (mod(current->at(i).getColumn(), height)); }
-    int getSE(long i) { return width * (mod(current->at(i).getRow() + 1, width))   + (mod(current->at(i).getColumn() + 1, height)); }
-
-    vector<int> getNeighbours(long i) {
-      vector<int> arr = 
-                {current->at(getNW(i)).getValue(),  current->at(getN(i)).getValue(), current->at(getNE(i)).getValue(), 
-                 current->at(getW(i)).getValue(),   current->at(getE(i)).getValue(),
-                 current->at(getSW(i)).getValue(),  current->at(getS(i)).getValue(), current->at(getSE(i)).getValue() };
-      return arr;
-    }
-};
-
 
 template<class C>
 struct Worker: ff_node_t<pair_t, int> {
@@ -229,9 +116,10 @@ class Game {
     long size;
 
   public:
+    // Default constructor
     Game() {
     }
-    // copy constructor (must be explicitly declared if class has non-copyable member)
+    // Copy constructor (must be explicitly declared if class has non-copyable member)
     Game(const Game& obj) 
     {
       table = obj.table;
@@ -239,7 +127,7 @@ class Game {
       nSteps = obj.nSteps;
       size = obj.size;
     }
-    Game& operator=(const Game&& obj) //move constructor (must be explicitly declared if class has non-copyable member)
+    Game& operator=(const Game&& obj) // Move constructor (must be explicitly declared if class has non-copyable member)
     {
       table = obj.table;
       nw = obj.nw;
@@ -248,14 +136,28 @@ class Game {
       return *this;
     }
 
+    // Constructor
     Game(long height, long width, int nw, int nSteps):
       nw(nw), nSteps(nSteps) {
       table = Table(height, width);
       size = height * width;
     }
 
+    /**
+     * Function containing the algorithm to use to compute the next state of a cell
+     * 
+     * @param val the value of the current state of the cell
+     * @param arr an array containing the states of the neighbourhood of the cell
+     * @returns the new state of the cell
+     */
     virtual int rule(int val, vector<int> arr) { return 0; };
     
+    /**
+     * Starts the computation of the automata
+     * 
+     * @param steps number of steps to be performed
+     * @returns the time elapsed in milliseconds
+     */
     double run() {
 
       if (nw == 1) {

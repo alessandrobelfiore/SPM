@@ -2,12 +2,12 @@
 #include <cstdlib>
 #include <chrono>
 
-#ifndef INTVECT
-//#include "frameworkFF.hpp"
-#include "frameFF_mw.hpp"
+#ifndef DM
+#include "frameFF_mw_1D.hpp"
 #endif
-#ifdef INTVECT
-#include "frameFF_ints.hpp"
+// distributed memory version
+#ifdef DM 
+#include "frameFF_DM2D.hpp"
 #endif
 
 typedef std::chrono::high_resolution_clock Clock;
