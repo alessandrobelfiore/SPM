@@ -68,7 +68,6 @@ class Game {
     // Constructor
     Game(int height, int width, int nw):
       height(height), width(width), nw(nw) {
-        
         table = Table(height, width);
         table.generate();
         size = height * width;

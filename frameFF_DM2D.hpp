@@ -170,8 +170,8 @@ class Game {
       return *this;
     }
 
-    Game(long height, long width, int nw, int nSteps):
-        nw(nw), nSteps(nSteps) {
+    Game(long height, long width, int nw):
+        nw(nw) {
         table = Table(height, width);
         table.generate();
         size = height * width;
@@ -198,7 +198,8 @@ class Game {
 
     virtual int rule(int val, vector<int> arr) { return 0; };
     
-    double run() {
+    double run(int steps) {
+      nSteps = steps;
 
       if (nw == 1) {
         for (int j = 0; j < nSteps; j++) {

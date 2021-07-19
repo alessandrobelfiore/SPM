@@ -65,8 +65,8 @@ class Game {
     }
 
     // Constructor
-    Game(int height, int width, int nw, int nSteps):
-      nw(nw), nSteps(nSteps) {
+    Game(int height, int width, int nw):
+      nw(nw) {
         table = Table(height, width);
         size = height * width;
         threadsReady = 0;
@@ -116,6 +116,7 @@ class Game {
      * @returns the time elapsed in milliseconds
      */
     double run(int steps) {
+      nSteps = steps;
       
       if (nw == 1) {
         for (int j = 0; j < nSteps; j++) {

@@ -15,8 +15,8 @@ using namespace std;
 
 class Test: public Game {
   public:
-    Test(int height, int width, int nw, int nSteps) 
-      : Game { height, width, nw, nSteps } {}
+    Test(int height, int width, int nw) 
+      : Game { height, width, nw } {}
 
     int rule(int value, vector<int> neighValues) {
       int sum = 0;
@@ -68,10 +68,10 @@ int main(int argc, char* argv[]) {
 
   for (int i = 0; i < nRuns; i++) {
     // automaton setup
-    Test g = Test(height, width, nWorkers, nSteps);
+    Test g = Test(height, width, nWorkers);
     // timing the run
     auto startTime = Clock::now();
-    computations[i] = g.run();
+    computations[i] = g.run(nSteps);
     auto endTime = Clock::now();
     timings[i] = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
     if (timings[i] > max) max = timings[i];

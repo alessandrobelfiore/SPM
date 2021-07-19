@@ -3,13 +3,13 @@
 #include <chrono>
 #include <climits>
 
-// compile using array of objects to represent cells
-#ifndef INTVECT 
-#include "frame_2D_Cells.hpp"
+// Employ the 1D matrix implementation
+#ifndef TWOD
+#include "frame_threads_1D.hpp"
 #endif
-// compile using array of int to represent cells
-#ifdef INTVECT
-#include "frame_ints.hpp"
+// Employ the 2D matrix implementation
+#ifdef TWOD
+#include "frame_threads_2D.hpp"
 #endif
 
 
@@ -18,8 +18,8 @@ typedef std::chrono::high_resolution_clock Clock;
 
 class Test: public Game {
   public:
-    Test(int height, int width, int nw, int nSteps) 
-      : Game { height, width, nw, nSteps } {}
+    Test(int height, int width, int nw) 
+      : Game { height, width, nw } {}
 
     int rule(int value, vector<int> neighValues) {
       int sum = 0;
@@ -68,10 +68,10 @@ int main(int argc, char* argv[]) {
 
   for (int i = 0; i < nRuns; i++) {
     // automaton setup
-    Test g = Test(height, width, nWorkers, nSteps);
+    Test g = Test(height, width, nWorkers);
     // timing the run
     auto startTime = Clock::now();
-    computations[i] = g.run();
+    computations[i] = g.run(nSteps);
     auto endTime = Clock::now();
     timings[i] = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
     if (timings[i] > max) max = timings[i];
