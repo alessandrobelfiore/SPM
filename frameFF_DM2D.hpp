@@ -1,3 +1,10 @@
+/**
+ * This framework supports the execution of different rules on a cellular automata
+ * represented using a 2D matrix. The parallelism is obtained using FF basic blocks
+ * to achieve a Master-Worker pattern in which each worker has access to a local sub-matrix.
+ * Between each step the Emitter sends to each worker the "phantom rows" necessary to 
+ * continue the computation.
+ */
 #include <iostream>
 #include <iomanip>
 #include <vector>

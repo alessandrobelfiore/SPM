@@ -1,3 +1,8 @@
+/**
+ * This framework supports the execution of different rules on a cellular automata
+ * represented using a 2D matrix. The parallelism is obtained using stdlib C++ threads
+ * synchronized using mutexes and condition variables. The workload is divided only by rows
+ */
 #include <iostream>
 #include <vector>
 #include <thread>

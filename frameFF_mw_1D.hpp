@@ -1,3 +1,8 @@
+/**
+ * This framework supports the execution of different rules on a cellular automata
+ * represented using a 1D array. The parallelism is obtained using FF basic blocks
+ * to achieve a Master-Worker pattern.
+ */
 #include <iostream>
 #include <iomanip>
 #include <vector>
