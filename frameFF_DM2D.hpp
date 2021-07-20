@@ -229,7 +229,21 @@ class Game {
         }
     }
 
+    /**
+     * Function containing the algorithm to use to compute the next state of a cell
+     * 
+     * @param val the value of the current state of the cell
+     * @param arr an array containing the states of the neighbourhood of the cell
+     * @returns the new state of the cell
+     */
     virtual int rule(int val, vector<int> arr) { return 0; };
+
+    /**
+     * Prints the current state of the automata
+     */
+    void print() {
+      table.printCurrent();
+    }
     
     double run(int steps) {
       nSteps = steps;

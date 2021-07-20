@@ -129,6 +129,13 @@ class Game {
     virtual int rule(int val, vector<int> arr) { return 0; };
 
     /**
+     * Prints the current state of the automata
+     */
+    void print() {
+      table.printCurrent();
+    }
+
+    /**
      * Starts the computation of the automata
      * 
      * @param steps number of steps to be performed
