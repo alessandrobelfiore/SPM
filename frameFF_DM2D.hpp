@@ -4,6 +4,9 @@
  * to achieve a Master-Worker pattern in which each worker has access to a local sub-matrix.
  * Between each step the Emitter sends to each worker the "phantom rows" necessary to 
  * continue the computation.
+ * 
+ * To use the user should implement a subclass of Game, implement the virtual method rule,
+ * instantiate an object of the class, and call the method run().
  */
 #include <iostream>
 #include <iomanip>

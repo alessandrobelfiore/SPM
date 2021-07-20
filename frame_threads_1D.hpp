@@ -3,6 +3,9 @@
  * represented using a 1D array. The parallelism is obtained using stdlib C++ threads
  * synchronized using mutexes and condition variables. The workload is divided
  * indipendently of rows.
+ * 
+ * To use the user should implement a subclass of Game, implement the virtual method rule,
+ * instantiate an object of the class, and call the method run().
  */
 #include <iostream>
 #include <vector>

@@ -2,6 +2,9 @@
  * This framework supports the execution of different rules on a cellular automata
  * represented using a 1D array. The parallelism is obtained using FF basic blocks
  * to achieve a Master-Worker pattern.
+ * 
+ * To use the user should implement a subclass of Game, implement the virtual method rule,
+ * instantiate an object of the class, and call the method run().
  */
 #include <iostream>
 #include <iomanip>
