@@ -159,7 +159,6 @@ class Game {
               table.setFuture(i, j, nVal);
             }
           }
-          //table.printCurrent();
           table.swapCurrentFuture();
         }
         return 0;
@@ -192,7 +191,6 @@ class Game {
         }
         if (threadsDone.load() == nw) break;
         table.swapCurrentFuture();
-        //table.printCurrent();
         threadsReady.exchange(0);
         // send wake up signals
         nextStep.notify_all();

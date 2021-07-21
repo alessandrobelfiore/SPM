@@ -157,7 +157,6 @@ class Game {
             int nVal = rule(val, table.getNeighbours(i));
             table.setFuture(i, nVal);
           }
-          //table.printCurrent();
           table.swapCurrentFuture();
         }
         auto endTime = Clock::now();
@@ -191,7 +190,6 @@ class Game {
         }
         if (threadsDone.load() == nw) break;
         table.swapCurrentFuture();
-        //table.printCurrent();
         threadsReady.exchange(0);
         // send wake up signals
         nextStep.notify_all();
