@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
   // args
   if (argc != 5 && argc != 6) {
     cout << "Received " << argc - 1 << " of the minimum 4 arguments" << endl;
-    cout << "Usage is " << argv[0] << " height width num_workers num_steps" << endl;
+    cout << "Usage is " << argv[0] << " height width num_workers num_steps num_runs" << endl;
     return(-1);
   }
 
