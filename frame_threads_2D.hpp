@@ -77,6 +77,9 @@ class Game {
     // Constructor
     Game(int height, int width, int nw):
       height(height), width(width), nw(nw) {
+        if (nw <= 0 || width <= 0 || height <= 0) {
+          throw "Invalid parameters, check framework API";
+        }
         table = Table(height, width);
         table.generate();
         size = height * width;
@@ -86,6 +89,9 @@ class Game {
 
     Game(int height, int width, int nw, vector<int> input):
       height(height), width(width), nw(nw) {
+        if (nw <= 0 || width <= 0 || height <= 0) {
+          throw "Invalid parameters, check framework API";
+        }
         table = Table(height, width, input);
         size = height * width;
         threadsReady = 0;

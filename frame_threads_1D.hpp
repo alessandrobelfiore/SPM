@@ -76,6 +76,9 @@ class Game {
     // Constructor
     Game(int height, int width, int nw):
       nw(nw) {
+        if (nw <= 0 || width <= 0 || height <= 0) {
+          throw "Invalid parameters, check framework API";
+        }
         table = Table(height, width);
         size = height * width;
         threadsReady = 0;
@@ -85,6 +88,9 @@ class Game {
     // Constructor with initializiation of the matrix values
     Game(int height, int width, int nw, vector<int> input):
       nw(nw) {
+        if (nw <= 0 || width <= 0 || height <= 0) {
+          throw "Invalid parameters, check framework API";
+        }
         table = Table(height, width, input);
         size = height * width;
         threadsReady = 0;
@@ -154,7 +160,7 @@ class Game {
           //table.printCurrent();
           table.swapCurrentFuture();
         }
-         auto endTime = Clock::now();
+        auto endTime = Clock::now();
         return chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
       }
 

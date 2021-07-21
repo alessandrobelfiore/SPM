@@ -139,13 +139,12 @@ struct Emitter: ff_monode_t<int, pair_v> {
   }
 };
 
-/* Class representing a game instance
-  table:      the table
-  subtables:  array of subtables composing the original table
-  rule:       rule to apply to get the next state of the cell
-  nw:         number of workers
-  nSteps:     number of steps to execute
-  size:       size of the table */
+/**
+ * Class representing the main access point to the framework
+ * 
+ * Contains a Table, a method rule, and the logic necessary to compute the rule on all cells
+ * of the table in parallel
+ */
 class Game {
   private:
     // game table
@@ -157,6 +156,7 @@ class Game {
     int nSteps;
     // number of Cells
     long size;
+    long width;
 
   public:
     Game() {
@@ -182,7 +182,7 @@ class Game {
 
     // Constructor initializing table with random values
     Game(long height, long width, int nw):
-        nw(nw) {
+        nw(nw), width(width) {
         table = Table(height, width);
         table.generate();
         size = height * width;
@@ -207,7 +207,10 @@ class Game {
 
     // Constructor initializing table with input vector
     Game(long height, long width, int nw, vector<int> input):
-        nw(nw) {
+        nw(nw), width(width) {
+        if (nw <= 0 || width <= 0 || height <= 0) {
+          throw "Invalid parameters, check framework API";
+        }
         table = Table(height, width, input);
         size = height * width;
         long s_height_avg = height / nw; // avg height of the subtables
@@ -242,11 +245,33 @@ class Game {
      * Prints the current state of the automata
      */
     void print() {
-      table.printCurrent();
+      if (nw == 1) {
+        table.printCurrent();
+        return;
+      }
+      for (int i = 0; i < nw; i++) {
+        for (long k = 1; k < subtables[i].getHeight() - 1; k++) {
+          for (long j = 0; j < width; j++) {
+            auto t = subtables[i].getCurrent();
+            int v = (*t)[k][j];
+            if (v == 0) cout << "-";
+            else cout << "x";
+          }
+          cout << endl;
+        }
+        cout << endl;
+      }
     }
     
+    /**
+     * Starts the computation of the automata
+     * 
+     * @param steps number of steps to be performed
+     * @returns the time elapsed in milliseconds
+     */
     double run(int steps) {
       nSteps = steps;
+      if (steps == 0) return 0;
 
       if (nw == 1) {
         for (int j = 0; j < nSteps; j++) {

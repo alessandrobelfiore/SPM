@@ -98,19 +98,19 @@ struct Emitter: ff_monode_t<int, pair_t> {
         pairs[i] = {start, stop};
         ff_send_out_to(&pairs[i], i); // send to worker i, the pair of indexes
         start += offset;
-        if (i == (nw - 2)) stop += offset + remaining; // fix for divisible dimensions
+        if (i == (nw - 2)) stop += offset + remaining; // fix for not divisible dimensions
         else stop += offset;
       }
       return GO_ON;
     }
     // If all threads have replied back
-    else if (++threadsR == nw && nSteps > 1) {
+    else if (++threadsR == nw && nSteps >= 1) {
       threadsR = 0;
       nSteps--;
       table->swapCurrentFuture();
       broadcast_task(&START_TASK);
     } 
-    else if (threadsR == nw && nSteps == 1) {
+    else if (threadsR == nw && nSteps == 0) {
       broadcast_task(EOS);
     }
     // Else we still have to wait some threads
@@ -159,6 +159,9 @@ class Game {
     // Constructor
     Game(long height, long width, int nw):
       nw(nw) {
+      if (nw <= 0 || width <= 0 || height <= 0) {
+        throw "Invalid parameters, check framework API";
+      }
       table = Table(height, width);
       size = height * width;
     }
@@ -166,6 +169,9 @@ class Game {
     // Constructor with initialization of the matrix values
     Game(long height, long width, int nw, vector<int> input):
       nw(nw) {
+      if (nw <= 0 || width <= 0 || height <= 0) {
+        throw "Invalid parameters, check framework API";
+      }
       table = Table(height, width, input);
       size = height * width;
     }

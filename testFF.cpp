@@ -44,20 +44,45 @@ int main(int argc, char* argv[]) {
 
   // height
   auto height   = atol(argv[1]);
+  if (height <= 0) {
+    cout << "Height cannot be less than 1" << endl;
+    cout << "Usage is " << argv[0] << " height width num_workers num_steps" << endl;
+    return(-1);
+  }
 
   // width
   auto width    = atol(argv[2]);
+  if (width <= 0) {
+    cout << "Width cannot be less than 1" << endl;
+    cout << "Usage is " << argv[0] << " height width num_workers num_steps" << endl;
+    return(-1);
+  }
 
   // number of workers
   auto nWorkers = atoi(argv[3]);
+  if (nWorkers <= 0) {
+    cout << "Workers must be al least 1" << endl;
+    cout << "Usage is " << argv[0] << " height width num_workers num_steps" << endl;
+    return(-1);
+  }
 
   // number of steps
   auto nSteps   = atoi(argv[4]);
+  if (nSteps <= 0) {
+    cout << "Number of steps must be > 0" << endl;
+    cout << "Usage is " << argv[0] << " height width num_workers num_steps" << endl;
+    return(-1);
+  }
 
   // number of runs
   auto nRuns = 1;
   if (argc == 6) {
     nRuns  = atoi(argv[5]);
+    if (nRuns <= 0) {
+      cout << "Number of runs must be > 0" << endl;
+      cout << "Usage is " << argv[0] << " height width num_workers num_steps" << endl;
+      return(-1);
+    }
   }
 
   vector<long> timings(nRuns);
@@ -68,6 +93,7 @@ int main(int argc, char* argv[]) {
   long sum = 0;
   long sumC = 0; 
   long min = LONG_MAX;
+  srand(112233);
 
   vector<int> input (height * width);
   for (int i = 0; i < height * width; i++) {
@@ -75,6 +101,7 @@ int main(int argc, char* argv[]) {
   }
 
   // automaton setup
+  try {
   Test g = Test(height, width, nWorkers, input);
   for (int i = 0; i < nRuns; i++) {
     // timing the run
@@ -88,10 +115,7 @@ int main(int argc, char* argv[]) {
     sumC += computations[i];
   }
 
-/*   for (int i = 0; i < nRuns; i++) {
-    cout << "Run number " << i + 1 << " computed in: " << timings[i] << " ms" << endl;
-    sum += timings[i];
-  } */
+  g.print();
 
   avg   = sum / nRuns;
   avgC  = sumC / nRuns;
@@ -100,6 +124,9 @@ int main(int argc, char* argv[]) {
   cout << "Maximum time: " << max << " ms" << endl;
   cout << "Average time: " << avg << " ms" << endl;
   cout << "Average time comp: " << avgC << " ms" << endl;
+  } catch (const char* msg) {
+    cerr << msg << endl;
+  }
 
   return 0;
 }
