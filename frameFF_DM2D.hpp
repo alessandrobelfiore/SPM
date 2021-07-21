@@ -68,7 +68,6 @@ struct Worker: ff_node_t<pair_v, int> {
         table->setCurrent(0, j, in->first[j]);
         table->setCurrent(table->getHeight() - 1, j, in->second[j]);
       }
-      /* table->printCurrent(); */
       return GO_ON;
     }
     for (long i = start; i < stop; i++) {
@@ -77,7 +76,6 @@ struct Worker: ff_node_t<pair_v, int> {
       table->setFuture(i, nVal);
       /* cout << "setting cell: " << i << " with value: " << nVal << endl; */
     }
-    /* cout << "setting future" << endl; */
     table->swapCurrentFuture();
     /* cout << "future swapped in thread: " << id << endl; */
     return &id;
@@ -89,14 +87,13 @@ struct Worker: ff_node_t<pair_v, int> {
  */
 struct Emitter: ff_monode_t<int, pair_v> {
 
-  Table* table;
   vector<Table>* subtables;
   vector<pair_v>* pairs;
   int threads_r, nw, nSteps;
 
   // Constructor
-  Emitter(const int nSteps, const int nw, const long size, Table* table, vector<Table>* subtables): 
-    nSteps(nSteps), nw(nw), table(table), subtables(subtables) {
+  Emitter(const int nSteps, const int nw, const long size, vector<Table>* subtables): 
+    nSteps(nSteps), nw(nw), subtables(subtables) {
       threads_r = 0;
       pairs = new vector<pair_v>(nw);
     }
@@ -111,12 +108,21 @@ struct Emitter: ff_monode_t<int, pair_v> {
     }
     else {
       threads_r ++;
-      // If the computation is over, broadcast EOS
+      // If the computation is over
       if (nSteps <= 0) {
+        pairs->clear();
+        // Synchronize phantom rows for last time
+          for (int i = 0; i < nw; i++) {
+            auto tmp = subtables->at(mod(i + 1, nw));
+            auto tmp2 = subtables->at(mod(i - 1, nw));
+            auto pair = make_pair(tmp2.getRow(tmp2.getHeight() - 2), tmp.getRow(1));
+            pairs->push_back(pair);
+            ff_send_out(&pairs->at(i), i);  
+          }
+        // And broadcast EOS
         broadcast_task(EOS);
       }
       else {
-        // this section should be locked
         // If all threads are in ready state
         if (threads_r == nw) {
           pairs->clear();
@@ -183,6 +189,9 @@ class Game {
     // Constructor initializing table with random values
     Game(long height, long width, int nw):
         nw(nw), width(width) {
+        if (nw <= 0 || width <= 0 || height <= 0) {
+          throw "Invalid parameters, check framework API";
+        }
         table = Table(height, width);
         table.generate();
         size = height * width;
@@ -285,7 +294,7 @@ class Game {
         return 0;
       }
 
-      Emitter E(nSteps, nw, size, &table, &subtables);
+      Emitter E(nSteps, nw, size, &subtables);
       ff::ff_Farm<> farm( [&]() {
         vector<std::unique_ptr<ff_node> > W;
         for(int i = 0; i < nw; i++) {
@@ -305,9 +314,5 @@ class Game {
 
       auto endTime = Clock::now();
       return chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
-      /* for (int i = 0; i < nw; i++) {
-        subtables[i].printCurrent();
-        subtables[i].printFuture();
-      } */
     }
 };

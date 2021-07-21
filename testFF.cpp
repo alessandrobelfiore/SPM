@@ -5,7 +5,7 @@
 #ifndef DM
 #include "frameFF_mw_1D.hpp"
 #endif
-// distributed memory version
+// Employ distributed memory version
 #ifdef DM 
 #include "frameFF_DM2D.hpp"
 #endif
@@ -102,28 +102,28 @@ int main(int argc, char* argv[]) {
 
   // automaton setup
   try {
-  Test g = Test(height, width, nWorkers, input);
-  for (int i = 0; i < nRuns; i++) {
-    // timing the run
-    auto startTime = Clock::now();
-    computations[i] = g.run(nSteps);
-    auto endTime = Clock::now();
-    timings[i] = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
-    if (timings[i] > max) max = timings[i];
-    if (timings[i] < min) min = timings[i];
-    sum += timings[i];
-    sumC += computations[i];
-  }
+    Test g = Test(height, width, nWorkers, input);
+    for (int i = 0; i < nRuns; i++) {
+      // timing the run
+      auto startTime = Clock::now();
+      computations[i] = g.run(nSteps);
+      auto endTime = Clock::now();
+      timings[i] = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
+      if (timings[i] > max) max = timings[i];
+      if (timings[i] < min) min = timings[i];
+      sum += timings[i];
+      sumC += computations[i];
+    }
 
-  g.print();
+    g.print();
 
-  avg   = sum / nRuns;
-  avgC  = sumC / nRuns;
+    avg   = sum / nRuns;
+    avgC  = sumC / nRuns;
 
-  cout << "Minimum time: " << min << " ms" << endl;
-  cout << "Maximum time: " << max << " ms" << endl;
-  cout << "Average time: " << avg << " ms" << endl;
-  cout << "Average time comp: " << avgC << " ms" << endl;
+    cout << "Minimum time: " << min << " ms" << endl;
+    cout << "Maximum time: " << max << " ms" << endl;
+    cout << "Average time: " << avg << " ms" << endl;
+    cout << "Average time comp: " << avgC << " ms" << endl;
   } catch (const char* msg) {
     cerr << msg << endl;
   }

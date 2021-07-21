@@ -199,8 +199,9 @@ class Game {
      * @returns the time elapsed in milliseconds
      */
     double run(int steps) {
-
       nSteps = steps;
+      if (steps == 0) return 0;
+
       if (nw == 1) {
         for (int j = 0; j < nSteps; j++) {
           for (int i = 0; i < size; i++) {
