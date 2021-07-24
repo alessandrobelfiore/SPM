@@ -164,6 +164,8 @@ class Game {
         return 0;
       }
 
+      auto startTime = Clock::now();
+
       vector<thread*> tids(nw);
       long s_height = height / nw;   // actual height of the current subtable (including the last one)
       long remaining  = height % nw;
@@ -176,7 +178,8 @@ class Game {
         else stop += s_height;
       }
 
-      auto startTime = Clock::now();
+      auto endTime = Clock::now();
+      auto setupTime = chrono::duration_cast<chrono::microseconds>(endTime - startTime).count();
 
       // if computation is not over
       while (threadsDone.load() != nw) {
@@ -190,11 +193,16 @@ class Game {
           if (threadsDone.load() == nw) break;
         }
         if (threadsDone.load() == nw) break;
+        startTime = Clock::now();
         table.swapCurrentFuture();
         threadsReady.exchange(0);
         // send wake up signals
         nextStep.notify_all();
+        endTime = Clock::now();
+        setupTime = setupTime + chrono::duration_cast<chrono::microseconds>(endTime - startTime).count();
       }
+
+      startTime = Clock::now();
 
       threadsReady.exchange(0);
       threadsDone.exchange(0);
@@ -202,7 +210,7 @@ class Game {
       for(auto e : tids)
         e->join();
 
-      auto endTime = Clock::now();
-      return chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
+      endTime = Clock::now();
+      return setupTime + chrono::duration_cast<chrono::microseconds>(endTime - startTime).count();
     }
 };

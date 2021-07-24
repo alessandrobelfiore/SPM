@@ -148,6 +148,8 @@ class Game {
      */
     double run(int steps) {
       nSteps = steps;
+
+      auto startTime = Clock::now();
       
       if (nw == 1) {
         auto startTime = Clock::now();
@@ -175,7 +177,8 @@ class Game {
         else stop += offset;
       }
 
-      auto startTime = Clock::now();
+      auto endTime = Clock::now();
+      auto setupTime = chrono::duration_cast<chrono::microseconds>(endTime - startTime).count();
 
       // if computation is not over
       while (threadsDone.load() != nw) {
@@ -189,11 +192,16 @@ class Game {
           if (threadsDone.load() == nw) break;
         }
         if (threadsDone.load() == nw) break;
+        startTime = Clock::now();
         table.swapCurrentFuture();
         threadsReady.exchange(0);
         // send wake up signals
         nextStep.notify_all();
+        endTime = Clock::now();
+        setupTime = setupTime + chrono::duration_cast<chrono::microseconds>(endTime - startTime).count();
       }
+
+      startTime = Clock::now();
 
       threadsReady.exchange(0);
       threadsDone.exchange(0);
@@ -201,8 +209,7 @@ class Game {
       for(auto e : tids)
         e->join();
 
-      auto endTime = Clock::now();
-
-      return chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
+      endTime = Clock::now();
+      return setupTime + chrono::duration_cast<chrono::microseconds>(endTime - startTime).count();
     }
 };

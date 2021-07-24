@@ -88,14 +88,15 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  vector<long> timings(nRuns);
-  vector<long> computations(nRuns);
-  long max = 0;
-  long avg = 0;
-  long avgC = 0;
-  long sum = 0;
-  long sumC = 0; 
-  long min = LONG_MAX;
+  vector<double> timings(nRuns);
+  vector<double> computations(nRuns);
+  vector<double> overhead(nRuns);
+  double max = 0;
+  double avg = 0;
+  double avgC = 0;
+  double sum = 0;
+  double sumC = 0; 
+  double min = LONG_MAX;
   srand(112233);
 
   vector<int> input (height * width);
@@ -109,24 +110,24 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < nRuns; i++) {
       // timing the run
       auto startTime = Clock::now();
-      computations[i] = g.run(nSteps);
+      overhead[i] = g.run(nSteps);
       auto endTime = Clock::now();
-      timings[i] = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
+      timings[i] = chrono::duration_cast<chrono::microseconds>(endTime - startTime).count();
       if (timings[i] > max) max = timings[i];
       if (timings[i] < min) min = timings[i];
       sum += timings[i];
-      sumC += computations[i];
+      sumC += overhead[i];
     }
 
-    g.print();
+    // g.print();
 
     avg   = sum / nRuns;
     avgC  = sumC / nRuns;
 
-    cout << "Minimum time: " << min << " ms" << endl;
-    cout << "Maximum time: " << max << " ms" << endl;
-    cout << "Average time: " << avg << " ms" << endl;
-    cout << "Average time comp: " << avgC << " ms" << endl;
+    cout << "Minimum time: " << min << " us" << endl;
+    cout << "Maximum time: " << max << " us" << endl;
+    cout << "Average time: " << avg << " us" << endl;
+    cout << "Average overhead: " << avgC << " us" << endl;
   } catch (const char* msg) {
     cerr << msg << endl;
   }
