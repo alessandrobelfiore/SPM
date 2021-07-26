@@ -1,8 +1,9 @@
 /**
  * This framework supports the execution of different rules on a cellular automata
- * represented using a 2D matrix. The parallelism is obtained using stdlib C++ threads
- * synchronized using mutexes and condition variables. The workload is divided only by rows
- *
+ * represented using a 1D array. The parallelism is obtained using stdlib C++ threads
+ * synchronized using mutexes and condition variables. The workload is divided
+ * indipendently of rows.
+ * 
  * To use the user should implement a subclass of Game, implement the virtual method rule,
  * instantiate an object of the class, and call the method run().
  */
@@ -15,13 +16,13 @@
 #include <cstdlib>
 #include <chrono>
 
-#include "ints_2D_t.hpp"
-//#include "cells_2D_t.hpp"
+#include "ints_1D_t_ref.hpp"
+//#include "cells_1D_t.hpp"
+
+using namespace std;
 
 // redefining clock from chrono library for easier use
 typedef std::chrono::high_resolution_clock Clock;
-
-using namespace std;
 
 /**
  * Class representing the main access point to the framework
@@ -39,8 +40,6 @@ class Game {
     int nSteps;
     // number of Cells
     int size;
-    int height;
-    int width;
     // wait here until nextStep is executable
     condition_variable nextStep;
     // wait here until a thread has completed a step
@@ -76,19 +75,19 @@ class Game {
 
     // Constructor
     Game(int height, int width, int nw):
-      height(height), width(width), nw(nw) {
+      nw(nw) {
         if (nw <= 0 || width <= 0 || height <= 0) {
           throw "Invalid parameters, check framework API";
         }
         table = Table(height, width);
-        table.generate();
         size = height * width;
         threadsReady = 0;
         threadsDone = 0;
     }
 
+    // Constructor with initializiation of the matrix values
     Game(int height, int width, int nw, vector<int> input):
-      height(height), width(width), nw(nw) {
+      nw(nw) {
         if (nw <= 0 || width <= 0 || height <= 0) {
           throw "Invalid parameters, check framework API";
         }
@@ -101,25 +100,27 @@ class Game {
     /**
      * Function passed to each thread to compute the algorithm on the cells
      * 
-     * @param rows_start index of the first row assigned to this thread
-     * @param rows_stop index of the last row assigned to this thread
-     * @param width the number of cells in each row
+     * @param start index of the matrix where the thread must start the computation
+     * @param stop index of the matrix of the last cell assigned to the thread
      */
-    void execute(int rows_start, int rows_stop, int width) {
-      for (int j = 0; j < nSteps; j++) {
-        for (int i = rows_start; i < rows_stop; i++) {
-          for (int j = 0; j < width; j++) {
-            int val = table.getCellValue(i, j);
-            int nVal = rule(val, table.getNeighbours(i, j));
-            table.setFuture(i, j, nVal);
-          }
+    void execute(int start, int stop) {
+       vector<int>* neigh = new vector<int> (8);
+        for (int j = 0; j < nSteps; j++) {
+          for (int i = start; i <= stop; i++) {
+            int val = table.getCellValue(i);
+            table.getNeighboursRef(i, neigh);
+            int nVal = rule(val, neigh);
+            table.setFuture(i, nVal);
         }
+        //cout << "Step: " << j << " ended" << endl;
         unique_lock<mutex> lock(m);
         if (++threadsReady == nw) {
+          //cout << "Notifying main thread!" << endl;
           check.notify_all();
         }
         nextStep.wait(lock);
       }
+      //cout << "Thread: " << this_thread::get_id() << " is done" << endl;
       threadsDone++;
       if (threadsDone.load() == nw) { check.notify_all(); }
       return;
@@ -132,7 +133,7 @@ class Game {
      * @param arr an array containing the states of the neighbourhood of the cell
      * @returns the new state of the cell
      */
-    virtual int rule(int val, vector<int> arr) { return 0; };
+    virtual int rule(int val, vector<int>* arr) { return 0; };
 
     /**
      * Prints the current state of the automata
@@ -145,37 +146,37 @@ class Game {
      * Starts the computation of the automata
      * 
      * @param steps number of steps to be performed
-     * @returns the overhead for parallel computation in microseconds
+     * @returns the overhead for parallel computation in milliseconds
      */
     double run(int steps) {
       nSteps = steps;
 
+      auto startTime = Clock::now();
+      
       if (nw == 1) {
+        vector<int>* neigh = new vector<int> (8); 
         for (int j = 0; j < nSteps; j++) {
-          for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-              int val = table.getCellValue(i, j);
-              int nVal = rule(val, table.getNeighbours(i, j));
-              table.setFuture(i, j, nVal);
-            }
+          for (int i = 0; i < size; i++) {
+            int val = table.getCellValue(i);
+            table.getNeighboursRef(i, neigh);
+            int nVal = rule(val, neigh);
+            table.setFuture(i, nVal);
           }
           table.swapCurrentFuture();
         }
         return 0;
       }
 
-      auto startTime = Clock::now();
-
       vector<thread*> tids(nw);
-      long s_height = height / nw;   // actual height of the current subtable (including the last one)
-      long remaining  = height % nw;
-      long start = 0;
-      long stop = s_height;
+      int offset = size / nw;
+      int remaining  =  size % nw;
+      int start = 0;
+      int stop = offset - 1;
       for(int i = 0; i < nw; i++) {
-        tids[i] = new thread(&Game::execute, this, start, stop, width);
-        start += s_height;
-        if (i == (nw - 2)) stop += s_height + remaining;
-        else stop += s_height;
+        tids[i] = new thread(&Game::execute, this, start, stop);
+        start += offset;
+        if (i == (nw - 2)) stop += offset + remaining;
+        else stop += offset;
       }
 
       auto endTime = Clock::now();

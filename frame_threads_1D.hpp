@@ -144,7 +144,7 @@ class Game {
      * Starts the computation of the automata
      * 
      * @param steps number of steps to be performed
-     * @returns the time elapsed in milliseconds
+     * @returns the overhead for parallel computation in microseconds
      */
     double run(int steps) {
       nSteps = steps;
@@ -152,7 +152,6 @@ class Game {
       auto startTime = Clock::now();
       
       if (nw == 1) {
-        auto startTime = Clock::now();
         for (int j = 0; j < nSteps; j++) {
           for (int i = 0; i < size; i++) {
             int val = table.getCellValue(i);
@@ -161,8 +160,7 @@ class Game {
           }
           table.swapCurrentFuture();
         }
-        auto endTime = Clock::now();
-        return chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
+        return 0;
       }
 
       vector<thread*> tids(nw);
