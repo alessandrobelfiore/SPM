@@ -2,11 +2,13 @@
 #include <chrono>
 #include <vector>
 
-#include "frame_threads_1D.hpp"
+//#include "frame_threads_1D.hpp"
 //#include "frame_threads_2D.hpp"
 //#include "frameFF_mw_1D.hpp"
 //#include "frameFF_DM2D.hpp"
-//#include "framework2.0/frame_threads_1D_ref.hpp"
+//#include "framework2.0/frame_threads_1D_active.hpp"
+#include "framework2.0/frame_threads_1D_ref.hpp"
+//#include "framework2.0/frame_threads_1D_ref_active.hpp"
 
 using namespace std;
 typedef std::chrono::high_resolution_clock Clock;
